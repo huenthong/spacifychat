@@ -19,69 +19,120 @@ if 'user_data' not in st.session_state:
 if 'show_form' not in st.session_state:
     st.session_state.show_form = False
 
-# CSS for WhatsApp-like styling
+# Enhanced CSS for better WhatsApp-like styling
 st.markdown("""
 <style>
-.chat-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #e5ddd5;
-    height: 80vh;
-    overflow-y: auto;
-    border-radius: 10px;
+/* Hide Streamlit default elements */
+.stDeployButton {display: none;}
+.stDecoration {display: none;}
+header {visibility: hidden;}
+.main .block-container {
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+    max-width: 100%;
 }
 
+/* Chat container styling */
+.chat-container {
+    background-color: #e5ddd5;
+    height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+    border-radius: 0;
+    margin: 0;
+}
+
+/* Message styling */
 .user-message {
     background-color: #dcf8c6;
     margin: 10px 0;
-    padding: 10px 15px;
-    border-radius: 18px;
-    max-width: 70%;
+    padding: 8px 12px;
+    border-radius: 7px 7px 7px 7px;
+    max-width: 60%;
     margin-left: auto;
-    margin-right: 10px;
+    margin-right: 0;
     word-wrap: break-word;
+    position: relative;
+    float: right;
+    clear: both;
 }
 
 .bot-message {
     background-color: #ffffff;
     margin: 10px 0;
-    padding: 10px 15px;
-    border-radius: 18px;
-    max-width: 70%;
-    margin-left: 10px;
+    padding: 8px 12px;
+    border-radius: 7px 7px 7px 7px;
+    max-width: 60%;
+    margin-left: 0;
     margin-right: auto;
     word-wrap: break-word;
+    position: relative;
+    float: left;
+    clear: both;
 }
 
 .timestamp {
     font-size: 11px;
     color: #666;
-    margin-top: 5px;
+    text-align: right;
+    margin-top: 2px;
 }
 
+.bot-timestamp {
+    font-size: 11px;
+    color: #666;
+    text-align: left;
+    margin-top: 2px;
+}
+
+/* Header styling */
 .chat-header {
     background-color: #075e54;
     color: white;
     padding: 15px;
-    border-radius: 10px 10px 0 0;
     text-align: center;
-    margin-bottom: 0;
+    margin: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-.form-container {
-    background-color: #f0f0f0;
-    padding: 20px;
-    border-radius: 10px;
-    margin: 10px 0;
-}
-
+/* Input area styling */
 .input-container {
+    background-color: #f0f0f0;
+    padding: 10px 20px;
     position: sticky;
     bottom: 0;
-    background-color: white;
-    padding: 10px;
-    border-radius: 0 0 10px 10px;
+    z-index: 100;
+}
+
+/* Form styling */
+.form-container {
+    background-color: #ffffff;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 7px;
+    border: 1px solid #ddd;
+}
+
+/* Clear floats */
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Streamlit form button styling */
+.stButton button {
+    background-color: #25d366;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+}
+
+.stButton button:hover {
+    background-color: #128c7e;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -101,11 +152,11 @@ def process_user_input(user_input):
     user_input_lower = user_input.lower().strip()
     
     if st.session_state.chat_stage == 'initial':
-        if any(greeting in user_input_lower for greeting in ['hi', 'hello', 'hey', 'good morning', 'good afternoon']):
+        if any(greeting in user_input_lower for greeting in ['hi', 'hello', 'hey']):
             st.session_state.chat_stage = 'greeting_responded'
             return """Hello! Welcome to BeLive Co-Living! 👋
 
-I'm here to help you find your perfect co-living space. 
+I'm here to help you find your perfect co-living space.
 
 To get started, could you please fill out this quick form so I can better assist you with your housing needs?"""
         else:
@@ -132,7 +183,7 @@ def handle_post_form_queries(user_input):
         return f"""Based on your preferences, here are our pricing options:
 
 🏠 **Single Room**: RM 800-1200/month
-🏠 **Shared Room**: RM 500-800/month
+🏠 **Shared Room**: RM 500-800/month  
 🏠 **Premium Room**: RM 1200-1800/month
 
 All prices include:
@@ -169,8 +220,8 @@ You can also call us directly at +60 12-345-6789."""
         return """I'm here to help with any questions about:
 
 🏠 Room types and pricing
-📍 Locations and amenities  
-👥 Community and facilities
+📍 Locations and amenities
+👥 Community and facilities  
 📅 Viewing appointments
 📋 Application process
 
@@ -183,30 +234,25 @@ def display_inquiry_form():
         col1, col2 = st.columns(2)
         
         with col1:
-            name = st.text_input("Full Name *", key="name")
-            phone = st.text_input("Phone Number *", key="phone")
-            email = st.text_input("Email Address *", key="email")
+            name = st.text_input("Full Name *")
+            phone = st.text_input("Phone Number *")
+            email = st.text_input("Email Address *")
         
         with col2:
-            move_in_date = st.date_input("Preferred Move-in Date *", key="move_in")
+            move_in_date = st.date_input("Preferred Move-in Date *")
             budget_range = st.selectbox("Budget Range (RM/month) *", 
-                                      ["Select budget range", "500-800", "800-1200", "1200-1800", "1800+"],
-                                      key="budget")
+                                      ["Select budget range", "500-800", "800-1200", "1200-1800", "1800+"])
             duration = st.selectbox("Stay Duration *", 
-                                  ["Select duration", "1-3 months", "3-6 months", "6-12 months", "12+ months"],
-                                  key="duration")
+                                  ["Select duration", "1-3 months", "3-6 months", "6-12 months", "12+ months"])
         
         room_type = st.selectbox("Preferred Room Type *", 
-                                ["Select room type", "Single Room", "Shared Room", "Premium Room", "Any"],
-                                key="room_type")
+                                ["Select room type", "Single Room", "Shared Room", "Premium Room", "Any"])
         
         location = st.selectbox("Preferred Location *", 
-                               ["Select location", "KL City Center", "Mont Kiara", "Bangsar", "Petaling Jaya", "Setapak", "Any"],
-                               key="location")
+                               ["Select location", "KL City Center", "Mont Kiara", "Bangsar", "Petaling Jaya", "Setapak", "Any"])
         
         additional_info = st.text_area("Additional Requirements/Questions", 
-                                     placeholder="Any specific needs or questions you'd like us to know about...",
-                                     key="additional")
+                                     placeholder="Any specific needs or questions you'd like us to know about...")
         
         submitted = st.form_submit_button("Submit Inquiry", use_container_width=True)
         
@@ -250,49 +296,47 @@ How can I help you further?"""
             else:
                 st.error("Please fill in all required fields marked with *")
 
-# Main app layout
+# Header
 st.markdown('<div class="chat-header"><h2>🏠 BeLive Co-Living</h2><p>Customer Service Chat</p></div>', unsafe_allow_html=True)
 
-# Chat container
-chat_container = st.container()
+# Main chat container
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
-with chat_container:
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    
-    # Display chat messages
-    for message in st.session_state.messages:
-        if message['sender'] == 'user':
-            st.markdown(f"""
-            <div class="user-message">
-                {message['content']}
-                <div class="timestamp">{message['timestamp']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="bot-message">
-                {message['content']}
-                <div class="timestamp">{message['timestamp']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Show form if triggered
-    if st.session_state.show_form:
-        st.markdown('<div class="form-container">', unsafe_allow_html=True)
-        display_inquiry_form()
-        st.markdown('</div>', unsafe_allow_html=True)
-    
+# Display chat messages
+for message in st.session_state.messages:
+    if message['sender'] == 'user':
+        st.markdown(f"""
+        <div class="user-message">
+            {message['content']}
+            <div class="timestamp">{message['timestamp']}</div>
+        </div>
+        <div class="clearfix"></div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div class="bot-message">
+            {message['content']}
+            <div class="bot-timestamp">{message['timestamp']}</div>
+        </div>
+        <div class="clearfix"></div>
+        """, unsafe_allow_html=True)
+
+# Show form if triggered
+if st.session_state.show_form:
+    st.markdown('<div class="form-container">', unsafe_allow_html=True)
+    display_inquiry_form()
     st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Input area
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
 
-# Use form to handle input submission
 with st.form("chat_input_form", clear_on_submit=True):
     col1, col2 = st.columns([5, 1])
     
     with col1:
-        user_input = st.text_input("Type your message...", label_visibility="collapsed")
+        user_input = st.text_input("Type your message...", label_visibility="collapsed", placeholder="Type your message...")
     
     with col2:
         send_button = st.form_submit_button("Send", use_container_width=True)
