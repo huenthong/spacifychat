@@ -27,16 +27,60 @@ if 'selected_area' not in st.session_state:
 if 'selected_condo' not in st.session_state:
     st.session_state.selected_condo = None
 
-# Data for areas and condos
+# Complete property data organized by areas
 AREAS_CONDOS = {
-    "KL City Center": ["KLCC Residences", "Pavilion Suites", "Times Square", "Regalia Residence"],
-    "Mont Kiara": ["Mont Kiara Bayu", "Arcoris", "Desa Green", "Verve Suites"],
-    "Bangsar": ["Bangsar Peak", "The Peak Residences", "Bangsar Puteri", "Kenny Hills"],
-    "Petaling Jaya": ["Tropicana City Mall", "The Curve", "Sunway Pyramid", "1 Utama"],
-    "Setapak": ["Wangsa Walk", "Danau Kota", "Genting Klang", "Sri Rampai"]
+    "KL City Center": [
+        "121 Residence", "7 Tree Seven", "Armani SOHO", "Austin Regency", 
+        "Icon City", "Majestic Maxim", "One Cochrane", "Pixel City Central", 
+        "The OOAK", "Trion KL", "Youth City"
+    ],
+    "Mont Kiara": [
+        "Mont Kiara", "Duta Park", "M Adora", "M Vertica", 
+        "The Andes", "Vertu Resort"
+    ],
+    "Ampang": [
+        "Acacia Residence Ampang", "Astoria Ampang", "The Azure", 
+        "The Azure Residences"
+    ],
+    "Ara Damansara": [
+        "Ara Damansara", "AraTre Residence", "Emporis Kota Damansara", 
+        "Kota Damansara"
+    ],
+    "Cheras": [
+        "Arte Cheras", "Cheras", "D'Cosmos", "Razak City Residences"
+    ],
+    "Petaling Jaya": [
+        "Parc3 Petaling Jaya", "The PARC3", "Kelana Jaya"
+    ],
+    "Bukit Jalil": [
+        "Bora Residence Bukit Jalil", "HighPark Suites", "Platinum Splendor"
+    ],
+    "Setapak": [
+        "Setapak", "Fairview Residence", "Keramat"
+    ],
+    "Subang Jaya": [
+        "Subang Jaya", "Sunway Avila", "Sunway Serene"
+    ],
+    "Sentul": [
+        "Sentul", "Vista Sentul", "Sinaran Sentul"
+    ],
+    "Sungai Besi": [
+        "Sungai Besi", "Marina Residence", "Sapphire Paradigm"
+    ],
+    "Bandar Sri Permaisuri": [
+        "Bandar Sri Permaisuri", "Astoria", "Epic Residence"
+    ],
+    "Seri Kembangan": [
+        "Seri Kembangan", "Secoya Residence", "Rica Residence"
+    ],
+    "Others": [
+        "Medini Signature", "Meta City", "MH Platinum 2", "Pinnacle", 
+        "Sinaran Residence", "The Birch", "Unio Residence", 
+        "Vivo Executive Apartment", "Vivo Residence"
+    ]
 }
 
-# Enhanced CSS for better WhatsApp-like styling
+# Enhanced CSS for seamless WhatsApp-like styling
 st.markdown("""
 <style>
 /* Hide Streamlit default elements */
@@ -46,46 +90,54 @@ header {visibility: hidden;}
 .main .block-container {
     padding-top: 0rem;
     padding-bottom: 0rem;
+    padding-left: 0rem;
+    padding-right: 0rem;
     max-width: 100%;
 }
 
-/* Chat container styling */
-.chat-container {
+/* Full page background */
+.stApp {
     background-color: #e5ddd5;
+}
+
+/* Chat container styling - seamless background */
+.chat-container {
+    background-color: transparent;
     height: 70vh;
     overflow-y: auto;
     padding: 20px;
-    border-radius: 0;
     margin: 0;
 }
 
 /* Message styling */
 .user-message {
     background-color: #dcf8c6;
-    margin: 10px 0;
+    margin: 8px 0;
     padding: 8px 12px;
     border-radius: 7px 7px 7px 7px;
-    max-width: 60%;
+    max-width: 65%;
     margin-left: auto;
     margin-right: 0;
     word-wrap: break-word;
     position: relative;
     float: right;
     clear: both;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .bot-message {
     background-color: #ffffff;
-    margin: 10px 0;
+    margin: 8px 0;
     padding: 8px 12px;
     border-radius: 7px 7px 7px 7px;
-    max-width: 60%;
+    max-width: 65%;
     margin-left: 0;
     margin-right: auto;
     word-wrap: break-word;
     position: relative;
     float: left;
     clear: both;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .timestamp {
@@ -112,24 +164,28 @@ header {visibility: hidden;}
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* Input area styling */
 .input-container {
     background-color: #f0f0f0;
-    padding: 10px 20px;
+    padding: 15px 20px;
     position: sticky;
     bottom: 0;
     z-index: 100;
+    border-top: 1px solid #ddd;
 }
 
-/* Selection and Form styling */
+/* Selection and Form styling - blend with background */
 .selection-container {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 15px;
-    margin: 10px 0;
-    border-radius: 7px;
+    margin: 10px 20px;
+    border-radius: 10px;
     border: 1px solid #ddd;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* Clear floats */
@@ -147,10 +203,38 @@ header {visibility: hidden;}
     border-radius: 20px;
     padding: 8px 16px;
     margin: 2px;
+    transition: background-color 0.3s;
 }
 
 .stButton button:hover {
     background-color: #128c7e;
+}
+
+/* Form elements styling */
+.stSelectbox > div > div {
+    background-color: white;
+}
+
+.stTextInput > div > div > input {
+    background-color: white;
+}
+
+.stMultiSelect > div > div {
+    background-color: white;
+}
+
+/* Radio button styling */
+.stRadio > div {
+    background-color: transparent;
+}
+
+/* Hide streamlit menu and footer */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Ensure content flows naturally */
+.element-container {
+    background-color: transparent !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -205,22 +289,36 @@ def handle_post_form_queries(user_input):
 📍 Shared bathroom, 3 housemates
 🚗 No parking
 
-Which room interests you? I can connect you with our agent for viewing and more details."""
+Which room interests you? I can connect you with our agent for viewing and more details.
+
+Reply with the room number or say "agent" to speak with our property consultant! 🏠"""
     
     elif 'no' in user_input.lower():
         return "No problem! Let me know if you'd like to explore other options or adjust your preferences."
     
+    elif 'agent' in user_input.lower() or any(room in user_input.lower() for room in ['a102', 'b205', 'c301']):
+        return """Perfect! I'm connecting you with our property consultant now.
+
+📞 **Agent Contact:**
+🏠 **Sarah Lim** - Senior Property Consultant
+📱 WhatsApp: +60 12-345-6789
+📧 Email: sarah@belive.com.my
+
+She will contact you within 30 minutes to arrange a viewing and provide more details about the room.
+
+Thank you for choosing BeLive Co-Living! 🎉"""
+    
     else:
-        return "Would you like to proceed with the available options within your budget range?"
+        return "Would you like to proceed with the available options within your budget range? Or would you like to speak with our agent directly?"
 
 def display_area_selection():
-    st.markdown("### Please select your preferred area:")
+    st.markdown("### 📍 Please select your preferred area:")
     
-    cols = st.columns(2)
     areas = list(AREAS_CONDOS.keys())
+    cols = st.columns(3)
     
     for i, area in enumerate(areas):
-        col_idx = i % 2
+        col_idx = i % 3
         with cols[col_idx]:
             if st.button(area, key=f"area_{i}", use_container_width=True):
                 st.session_state.selected_area = area
@@ -234,7 +332,7 @@ def display_area_selection():
 
 def display_condo_selection():
     if st.session_state.selected_area:
-        st.markdown(f"### Available condos in {st.session_state.selected_area}:")
+        st.markdown(f"### 🏠 Available properties in {st.session_state.selected_area}:")
         
         condos = AREAS_CONDOS[st.session_state.selected_area]
         cols = st.columns(2)
@@ -288,13 +386,14 @@ def display_inquiry_form():
                              ["Male", "Female"])
             
             # 8. Unit Specification (can choose multiple)
-            unit_spec = st.multiselect("8. Unit Specification *", 
+            unit_spec = st.multiselect("8. Unit Specification (can select multiple) *", 
                                       ["Female unit", "Male unit", "Mixed Gender unit"])
             
             # 10. Nationality
             nationality = st.radio("10. Nationality *", 
                                   ["Malaysia", "Others"])
             
+            nationality_specify = ""
             if nationality == "Others":
                 nationality_specify = st.text_input("Please specify nationality:")
         
@@ -304,7 +403,7 @@ def display_inquiry_form():
         submitted = st.form_submit_button("Submit Inquiry", use_container_width=True)
         
         if submitted:
-            if budget != "Select budget" and pax and workplace:
+            if budget != "Select budget" and pax and workplace and unit_spec:
                 # Store user data
                 st.session_state.user_data = {
                     'area': st.session_state.selected_area,
@@ -318,7 +417,7 @@ def display_inquiry_form():
                     'gender': gender,
                     'unit_spec': unit_spec,
                     'workplace': workplace,
-                    'nationality': nationality if nationality == "Malaysia" else nationality_specify if 'nationality_specify' in locals() else "Others"
+                    'nationality': nationality if nationality == "Malaysia" else nationality_specify
                 }
                 
                 st.session_state.show_form = False
@@ -334,7 +433,7 @@ def display_inquiry_form():
 📅 **Move-in**: {move_in_date}
 📋 **Tenancy**: {tenancy}
 👤 **Gender**: {gender}
-🏠 **Unit Type**: {', '.join(unit_spec) if unit_spec else 'Not specified'}
+🏠 **Unit Type**: {', '.join(unit_spec)}
 🏢 **Workplace**: {workplace}
 🌍 **Nationality**: {st.session_state.user_data['nationality']}
 
@@ -369,7 +468,7 @@ Please reply "Yes" to continue or "No" to explore other alternatives."""
 📍 Shared bathroom, 2 housemates
 🚗 No parking
 
-Which room interests you? I can connect you with our agent for viewing and more details."""
+Which room interests you? Reply with the room number or say "agent" to speak with our property consultant! 🏠"""
                     
                     add_message('bot', room_recs)
                 
