@@ -103,9 +103,9 @@ header {visibility: hidden;}
 /* Chat container styling - seamless background */
 .chat-container {
     background-color: transparent;
-    height: 70vh;
+    height: 60vh;
     overflow-y: auto;
-    padding: 20px;
+    padding: 10px 20px;
     margin: 0;
 }
 
@@ -170,18 +170,19 @@ header {visibility: hidden;}
 /* Input area styling */
 .input-container {
     background-color: #f0f0f0;
-    padding: 15px 20px;
+    padding: 10px 20px;
     position: sticky;
     bottom: 0;
     z-index: 100;
     border-top: 1px solid #ddd;
+    margin: 0;
 }
 
 /* Selection and Form styling - blend with background */
 .selection-container {
     background-color: rgba(255, 255, 255, 0.9);
     padding: 15px;
-    margin: 10px 20px;
+    margin: 5px 20px;
     border-radius: 10px;
     border: 1px solid #ddd;
     backdrop-filter: blur(5px);
