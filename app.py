@@ -103,9 +103,9 @@ header {visibility: hidden;}
 /* Chat container styling - seamless background */
 .chat-container {
     background-color: transparent;
-    height: 60vh;
+    height: 20vh;
     overflow-y: auto;
-    padding: 10px 20px;
+    padding: 10px;
     margin: 0;
 }
 
