@@ -287,13 +287,15 @@ with chat_container:
 # Input area
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
 
-col1, col2 = st.columns([5, 1])
-
-with col1:
-    user_input = st.text_input("Type your message...", key="user_input", label_visibility="collapsed")
-
-with col2:
-    send_button = st.button("Send", use_container_width=True)
+# Use form to handle input submission
+with st.form("chat_input_form", clear_on_submit=True):
+    col1, col2 = st.columns([5, 1])
+    
+    with col1:
+        user_input = st.text_input("Type your message...", label_visibility="collapsed")
+    
+    with col2:
+        send_button = st.form_submit_button("Send", use_container_width=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -306,8 +308,7 @@ if send_button and user_input:
     bot_response = process_user_input(user_input)
     add_message('bot', bot_response)
     
-    # Clear input and rerun
-    st.session_state.user_input = ""
+    # Rerun to show new messages
     st.rerun()
 
 # Initial greeting if no messages
