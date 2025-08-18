@@ -16,8 +16,25 @@ if 'chat_stage' not in st.session_state:
     st.session_state.chat_stage = 'initial'
 if 'user_data' not in st.session_state:
     st.session_state.user_data = {}
+if 'show_area_selection' not in st.session_state:
+    st.session_state.show_area_selection = False
+if 'show_condo_selection' not in st.session_state:
+    st.session_state.show_condo_selection = False
 if 'show_form' not in st.session_state:
     st.session_state.show_form = False
+if 'selected_area' not in st.session_state:
+    st.session_state.selected_area = None
+if 'selected_condo' not in st.session_state:
+    st.session_state.selected_condo = None
+
+# Data for areas and condos
+AREAS_CONDOS = {
+    "KL City Center": ["KLCC Residences", "Pavilion Suites", "Times Square", "Regalia Residence"],
+    "Mont Kiara": ["Mont Kiara Bayu", "Arcoris", "Desa Green", "Verve Suites"],
+    "Bangsar": ["Bangsar Peak", "The Peak Residences", "Bangsar Puteri", "Kenny Hills"],
+    "Petaling Jaya": ["Tropicana City Mall", "The Curve", "Sunway Pyramid", "1 Utama"],
+    "Setapak": ["Wangsa Walk", "Danau Kota", "Genting Klang", "Sri Rampai"]
+}
 
 # Enhanced CSS for better WhatsApp-like styling
 st.markdown("""
@@ -106,8 +123,8 @@ header {visibility: hidden;}
     z-index: 100;
 }
 
-/* Form styling */
-.form-container {
+/* Selection and Form styling */
+.selection-container {
     background-color: #ffffff;
     padding: 15px;
     margin: 10px 0;
@@ -122,13 +139,14 @@ header {visibility: hidden;}
     clear: both;
 }
 
-/* Streamlit form button styling */
+/* Streamlit button styling */
 .stButton button {
     background-color: #25d366;
     color: white;
     border: none;
     border-radius: 20px;
     padding: 8px 16px;
+    margin: 2px;
 }
 
 .stButton button:hover {
@@ -140,12 +158,11 @@ header {visibility: hidden;}
 def get_current_time():
     return datetime.now().strftime("%H:%M")
 
-def add_message(sender, content, is_form=False):
+def add_message(sender, content):
     st.session_state.messages.append({
         'sender': sender,
         'content': content,
-        'timestamp': get_current_time(),
-        'is_form': is_form
+        'timestamp': get_current_time()
     })
 
 def process_user_input(user_input):
@@ -153,24 +170,17 @@ def process_user_input(user_input):
     
     if st.session_state.chat_stage == 'initial':
         if any(greeting in user_input_lower for greeting in ['hi', 'hello', 'hey']):
-            st.session_state.chat_stage = 'greeting_responded'
+            st.session_state.chat_stage = 'ask_area'
+            st.session_state.show_area_selection = True
             return """Hello! Welcome to BeLive Co-Living! 👋
 
 I'm here to help you find your perfect co-living space.
 
-To get started, could you please fill out this quick form so I can better assist you with your housing needs?"""
+Which area are you interested in?"""
         else:
             return """Hello! Welcome to BeLive Co-Living! 👋
 
-I'm here to help you find your perfect co-living space. How can I assist you today?"""
-    
-    elif st.session_state.chat_stage == 'greeting_responded':
-        if any(word in user_input_lower for word in ['ok', 'yes', 'sure', 'okay', 'alright']):
-            st.session_state.show_form = True
-            st.session_state.chat_stage = 'form_stage'
-            return "Great! Please fill out the form below:"
-        else:
-            return "No problem! Feel free to ask me any questions about our co-living spaces, or let me know when you're ready to fill out the form."
+I'm here to help you find your perfect co-living space. Type 'Hi' to get started!"""
     
     elif st.session_state.chat_stage == 'form_completed':
         return handle_post_form_queries(user_input_lower)
@@ -179,119 +189,190 @@ I'm here to help you find your perfect co-living space. How can I assist you tod
         return "I'm here to help! What would you like to know about BeLive Co-Living?"
 
 def handle_post_form_queries(user_input):
-    if any(word in user_input for word in ['price', 'cost', 'rent', 'fee']):
-        return f"""Based on your preferences, here are our pricing options:
+    if 'yes' in user_input.lower():
+        # User confirmed budget, show room recommendations
+        return f"""Great! Here are our available room recommendations for {st.session_state.selected_condo}:
 
-🏠 **Single Room**: RM 800-1200/month
-🏠 **Shared Room**: RM 500-800/month  
-🏠 **Premium Room**: RM 1200-1800/month
+🏠 **Room A102** - RM 650/month
+📍 Shared bathroom, 2 housemates
+🚗 Parking available
 
-All prices include:
-✅ Utilities (water, electricity, internet)
-✅ Cleaning service
-✅ Maintenance
-✅ 24/7 security
+🏠 **Room B205** - RM 750/month  
+📍 Private bathroom, 1 housemate
+🚗 Parking available
 
-Would you like to schedule a viewing?"""
+🏠 **Room C301** - RM 680/month
+📍 Shared bathroom, 3 housemates
+🚗 No parking
+
+Which room interests you? I can connect you with our agent for viewing and more details."""
     
-    elif any(word in user_input for word in ['location', 'where', 'area']):
-        return f"""We have co-living spaces in several prime locations:
-
-📍 **KL City Center** - Walking distance to LRT
-📍 **Mont Kiara** - Expat-friendly area
-📍 **Bangsar** - Vibrant neighborhood
-📍 **Petaling Jaya** - Great connectivity
-📍 **Setapak** - Near universities
-
-Which area interests you most?"""
-    
-    elif any(word in user_input for word in ['viewing', 'visit', 'see', 'tour']):
-        return """Perfect! I'd love to arrange a viewing for you.
-
-Our viewing hours:
-🕒 Monday - Friday: 10 AM - 7 PM
-🕒 Saturday - Sunday: 10 AM - 5 PM
-
-Please let me know your preferred date and time, and I'll confirm the appointment for you!
-
-You can also call us directly at +60 12-345-6789."""
+    elif 'no' in user_input.lower():
+        return "No problem! Let me know if you'd like to explore other options or adjust your preferences."
     
     else:
-        return """I'm here to help with any questions about:
+        return "Would you like to proceed with the available options within your budget range?"
 
-🏠 Room types and pricing
-📍 Locations and amenities
-👥 Community and facilities  
-📅 Viewing appointments
-📋 Application process
+def display_area_selection():
+    st.markdown("### Please select your preferred area:")
+    
+    cols = st.columns(2)
+    areas = list(AREAS_CONDOS.keys())
+    
+    for i, area in enumerate(areas):
+        col_idx = i % 2
+        with cols[col_idx]:
+            if st.button(area, key=f"area_{i}", use_container_width=True):
+                st.session_state.selected_area = area
+                st.session_state.show_area_selection = False
+                st.session_state.show_condo_selection = True
+                st.session_state.chat_stage = 'area_selected'
+                
+                add_message('user', area)
+                add_message('bot', f"Great choice! Here are the available co-living spaces in {area}:")
+                st.rerun()
 
-What would you like to know more about?"""
+def display_condo_selection():
+    if st.session_state.selected_area:
+        st.markdown(f"### Available condos in {st.session_state.selected_area}:")
+        
+        condos = AREAS_CONDOS[st.session_state.selected_area]
+        cols = st.columns(2)
+        
+        for i, condo in enumerate(condos):
+            col_idx = i % 2
+            with cols[col_idx]:
+                if st.button(condo, key=f"condo_{i}", use_container_width=True):
+                    st.session_state.selected_condo = condo
+                    st.session_state.show_condo_selection = False
+                    st.session_state.show_form = True
+                    st.session_state.chat_stage = 'condo_selected'
+                    
+                    add_message('user', condo)
+                    add_message('bot', f"Perfect! You've selected {condo}. Please fill out this form to proceed:")
+                    st.rerun()
 
 def display_inquiry_form():
     with st.form("inquiry_form"):
-        st.markdown("### 📋 BeLive Co-Living Inquiry Form")
+        st.markdown(f"### 📋 Inquiry Form - {st.session_state.selected_condo}")
+        
+        # 1. Room Budget/Type
+        budget = st.selectbox("1. Room Budget/Type *", 
+                             ["Select budget", "RM 500-700", "RM 700-900", "RM 900-1200", "RM 1200+"])
+        
+        # 2. How many pax staying
+        pax = st.radio("2. How many pax staying? *", 
+                      ["1", "2", "More than 2"])
         
         col1, col2 = st.columns(2)
         
         with col1:
-            name = st.text_input("Full Name *")
-            phone = st.text_input("Phone Number *")
-            email = st.text_input("Email Address *")
+            # 3. Do you have a car
+            have_car = st.radio("3. Do you have a car? *", 
+                               ["Yes", "No"])
+            
+            # 4. Need Car Park Lot
+            need_parking = st.radio("4. Need Car Park Lot? *", 
+                                   ["Yes", "No"])
+            
+            # 5. Move in date
+            move_in_date = st.date_input("5. When do you plan to move in? *")
+            
+            # 6. Tenancy Period
+            tenancy = st.radio("6. Tenancy Period *", 
+                              ["6 months", "12 months"])
         
         with col2:
-            move_in_date = st.date_input("Preferred Move-in Date *")
-            budget_range = st.selectbox("Budget Range (RM/month) *", 
-                                      ["Select budget range", "500-800", "800-1200", "1200-1800", "1800+"])
-            duration = st.selectbox("Stay Duration *", 
-                                  ["Select duration", "1-3 months", "3-6 months", "6-12 months", "12+ months"])
+            # 7. Gender
+            gender = st.radio("7. Gender *", 
+                             ["Male", "Female"])
+            
+            # 8. Unit Specification (can choose multiple)
+            unit_spec = st.multiselect("8. Unit Specification *", 
+                                      ["Female unit", "Male unit", "Mixed Gender unit"])
+            
+            # 10. Nationality
+            nationality = st.radio("10. Nationality *", 
+                                  ["Malaysia", "Others"])
+            
+            if nationality == "Others":
+                nationality_specify = st.text_input("Please specify nationality:")
         
-        room_type = st.selectbox("Preferred Room Type *", 
-                                ["Select room type", "Single Room", "Shared Room", "Premium Room", "Any"])
-        
-        location = st.selectbox("Preferred Location *", 
-                               ["Select location", "KL City Center", "Mont Kiara", "Bangsar", "Petaling Jaya", "Setapak", "Any"])
-        
-        additional_info = st.text_area("Additional Requirements/Questions", 
-                                     placeholder="Any specific needs or questions you'd like us to know about...")
+        # 9. Workplace
+        workplace = st.text_input("9. Where is your workplace? (To recommend closest property) *")
         
         submitted = st.form_submit_button("Submit Inquiry", use_container_width=True)
         
         if submitted:
-            if name and phone and email and budget_range != "Select budget range":
+            if budget != "Select budget" and pax and workplace:
+                # Store user data
                 st.session_state.user_data = {
-                    'name': name,
-                    'phone': phone,
-                    'email': email,
+                    'area': st.session_state.selected_area,
+                    'condo': st.session_state.selected_condo,
+                    'budget': budget,
+                    'pax': pax,
+                    'have_car': have_car,
+                    'need_parking': need_parking,
                     'move_in_date': move_in_date,
-                    'budget_range': budget_range,
-                    'duration': duration,
-                    'room_type': room_type,
-                    'location': location,
-                    'additional_info': additional_info
+                    'tenancy': tenancy,
+                    'gender': gender,
+                    'unit_spec': unit_spec,
+                    'workplace': workplace,
+                    'nationality': nationality if nationality == "Malaysia" else nationality_specify if 'nationality_specify' in locals() else "Others"
                 }
                 
                 st.session_state.show_form = False
                 st.session_state.chat_stage = 'form_completed'
                 
-                response = f"""Thank you {name}! ✨
+                # Form summary
+                summary = f"""✅ **Form Summary**
 
-I've received your inquiry with the following details:
-• Budget: RM {budget_range}/month
-• Room Type: {room_type}
-• Location: {location}
-• Move-in: {move_in_date}
+📍 **Location**: {st.session_state.selected_area} - {st.session_state.selected_condo}
+💰 **Budget**: {budget}
+👥 **Occupants**: {pax} person(s)
+🚗 **Car**: {have_car} | **Parking**: {need_parking}
+📅 **Move-in**: {move_in_date}
+📋 **Tenancy**: {tenancy}
+👤 **Gender**: {gender}
+🏠 **Unit Type**: {', '.join(unit_spec) if unit_spec else 'Not specified'}
+🏢 **Workplace**: {workplace}
+🌍 **Nationality**: {st.session_state.user_data['nationality']}
 
-Our team will review your requirements and get back to you within 24 hours at {email}.
-
-In the meantime, would you like to:
-1. Learn more about our pricing
-2. Know about our locations
-3. Schedule a viewing
-4. Ask any specific questions
-
-How can I help you further?"""
+Thank you for your submission! 🎉"""
                 
-                add_message('bot', response)
+                add_message('bot', summary)
+                
+                # Check budget and send confirmation if needed
+                if any(low_budget in budget for low_budget in ["RM 500-700", "RM 700-900"]):
+                    confirm_message = """⚠️ **Budget Notice**
+
+Based on your budget range, the available options might be limited. The average room price in this area is typically higher.
+
+Would you like to proceed with options within your budget range?
+
+Please reply "Yes" to continue or "No" to explore other alternatives."""
+                    
+                    add_message('bot', confirm_message)
+                else:
+                    # Direct to room recommendations
+                    room_recs = f"""Perfect! Here are available rooms in {st.session_state.selected_condo}:
+
+🏠 **Room A102** - RM 850/month
+📍 Private bathroom, 1 housemate
+🚗 Parking available
+
+🏠 **Room B205** - RM 950/month  
+📍 Private bathroom, studio-style
+🚗 Parking available
+
+🏠 **Room C301** - RM 780/month
+📍 Shared bathroom, 2 housemates
+🚗 No parking
+
+Which room interests you? I can connect you with our agent for viewing and more details."""
+                    
+                    add_message('bot', room_recs)
+                
                 st.rerun()
             else:
                 st.error("Please fill in all required fields marked with *")
@@ -321,9 +402,19 @@ for message in st.session_state.messages:
         <div class="clearfix"></div>
         """, unsafe_allow_html=True)
 
-# Show form if triggered
+# Show selections and forms
+if st.session_state.show_area_selection:
+    st.markdown('<div class="selection-container">', unsafe_allow_html=True)
+    display_area_selection()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+if st.session_state.show_condo_selection:
+    st.markdown('<div class="selection-container">', unsafe_allow_html=True)
+    display_condo_selection()
+    st.markdown('</div>', unsafe_allow_html=True)
+
 if st.session_state.show_form:
-    st.markdown('<div class="form-container">', unsafe_allow_html=True)
+    st.markdown('<div class="selection-container">', unsafe_allow_html=True)
     display_inquiry_form()
     st.markdown('</div>', unsafe_allow_html=True)
 
