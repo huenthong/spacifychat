@@ -216,7 +216,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.image("belivelogo.webp", use_container_width=True)
+#st.image("belivelogo.webp", use_container_width=True)
 
 # Temporary header with smaller logo
 st.markdown("""
