@@ -601,15 +601,15 @@ with tab2:
     
     with col1:
         # Leads by nationality
+        nat_counts = filtered_df['Nationality'].value_counts().reset_index()
+        nat_counts.columns = ['Nationality', 'Count']
         fig_nat = px.bar(
-            filtered_df['Nationality'].value_counts().reset_index(),
-            x='index',
-            y='Nationality',
+            nat_counts,
+            x='Nationality',
+            y='Count',
             title="Leads by Nationality",
             color='Nationality'
         )
-        fig_nat.update_xaxes(title='Nationality')
-        fig_nat.update_yaxes(title='Count')
         st.plotly_chart(fig_nat, use_container_width=True)
     
     with col2:
