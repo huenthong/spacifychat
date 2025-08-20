@@ -216,6 +216,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ⬇️ Add this right after your existing CSS block (either inside it at the end, or as a new block after it)
+st.markdown("""
+<style>
+/* tighten vertical spacing between Streamlit elements */
+div.element-container { margin-top: 4px !important; margin-bottom: 4px !important; }
+/* remove default gaps inside columns */
+div[data-testid="stVerticalBlock"] { gap: 4px !important; }
+/* the message list should start immediately under the header */
+.chat-scroll {
+  height: 650px;            /* adjust as needed */
+  overflow-y: auto;
+  padding: 12px 20px 16px;  /* small top padding = no big gap */
+  margin: 0 !important;
+  background: transparent;
+  display: block;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # REPLACE THIS ENTIRE HEADER WITH YOUR LOGO IMAGE:
 st.image("belivelogo.webp", width=400)
 
@@ -565,20 +585,36 @@ Calculating ALPS score and routing to best agent..."""
     # Create layout for chat demo - full width for chat
     col1, col2 = st.columns([3, 1])
     
-    with col1:
+    #with col1:
         # Chat Header with smaller brand logo
-        st.markdown('''
-        <div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); color: white; padding: 12px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <span style="color: #4ECDC4; background: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">be</span><span style="color: #FF7F50; background: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">live</span>
-                <span style="margin-left: 8px; font-size: 16px;">Co-Living</span>
-            </div>
-            <p style="margin: 3px 0 0 0; font-size: 11px; opacity: 0.9;">Customer Service Chat</p>
-        </div>
-        ''', unsafe_allow_html=True)
+        #st.markdown('''
+        #<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); color: white; padding: 12px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;">
+            #<div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                #<span style="color: #4ECDC4; background: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">be</span><span style="color: #FF7F50; background: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">live</span>
+                #<span style="margin-left: 8px; font-size: 16px;">Co-Living</span>
+            #</div>
+            #<p style="margin: 3px 0 0 0; font-size: 11px; opacity: 0.9;">Customer Service Chat</p>
+        #</div>
+        #''', unsafe_allow_html=True)
+
+    # Chat header (use your own logo image file)
+    CHAT_HEADER_HTML = f"""
+    <div style="
+      background: linear-gradient(135deg, #4ECDC4, #FF7F50);
+      padding: 8px 12px;
+      border-radius: 10px 10px 0 0;
+      margin: 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:56px;">
+      <img src="belivelogo.webp" alt="BeLive" style="height:34px; object-fit:contain;" />
+    </div>
+    """
+    st.markdown(CHAT_HEADER_HTML, unsafe_allow_html=True)
         
         # Main chat container - BIGGER HEIGHT, NO GAPS
-        st.markdown('<div style="height: 750px; overflow-y: auto; padding: 20px; margin: 0; background: transparent;">', unsafe_allow_html=True)
+        st.markdown('<div class="chat-scroll">', unsafe_allow_html=True)
         
         # Display chat messages with brand colors
         for message in st.session_state.chat_messages:
