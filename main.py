@@ -169,7 +169,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sidebar for filters
 # Sidebar explanation
 st.sidebar.markdown("""
 ### 📊 Filter Purpose
@@ -307,7 +306,6 @@ I'm here to help you find your perfect co-living space. Type 'Hi' to get started
 
     def handle_post_form_queries(user_input):
         if 'yes' in user_input.lower():
-            # User confirmed budget, show room recommendations
             return f"""Great! Here are our available room recommendations for {st.session_state.selected_condo}:
 
 🏠 **Room A102** - RM 650/month
@@ -732,227 +730,7 @@ We're excited to help you find your perfect co-living space in Kuala Lumpur.
 
 Type 'Hi' to get started!"""
         add_chat_message('bot', initial_message)
-        st.rerun() np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)'])
-        elif lead_temp == 'Warm':
-            return np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)', 'Amy (Senior)', 'David (Senior)'])
-        else:
-            return np.random.choice(['Amy (Senior)', 'David (Senior)', 'Lisa (Junior)', 'Mike (Junior)'])
-    
-    # Create two columns for chat and ALPS analysis
-    col1, col2 = st.columns([3, 2])
-    
-    with col1:
-        st.markdown("""
-        <div style="background-color: #e5ddd5; padding: 15px; border-radius: 10px; height: 600px; overflow-y: auto;">
-        """, unsafe_allow_html=True)
-        
-        # Display chat messages
-        for message in st.session_state.chat_messages:
-            if message['sender'] == 'user':
-                st.markdown(f"""
-                <div style="background-color: #dcf8c6; margin: 8px 0; padding: 8px 12px; border-radius: 7px; 
-                           max-width: 70%; margin-left: auto; float: right; clear: both;">
-                    {message['content']}
-                    <div style="font-size: 11px; color: #666; text-align: right; margin-top: 2px;">{message['timestamp']}</div>
-                </div>
-                <div style="clear: both;"></div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div style="background-color: #ffffff; margin: 8px 0; padding: 8px 12px; border-radius: 7px; 
-                           max-width: 70%; margin-right: auto; float: left; clear: both; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                    {message['content']}
-                    <div style="font-size: 11px; color: #666; text-align: left; margin-top: 2px;">{message['timestamp']}</div>
-                </div>
-                <div style="clear: both;"></div>
-                """, unsafe_allow_html=True)
-        
-        # Show area selection
-        if st.session_state.show_area_selection:
-            st.markdown("**Please select your preferred area:**")
-            areas = list(AREAS_CONDOS.keys())
-            for area in areas:
-                if st.button(area, key=f"chat_area_{area}"):
-                    st.session_state.selected_area = area
-                    st.session_state.show_area_selection = False
-                    st.session_state.show_condo_selection = True
-                    add_chat_message('user', area)
-                    add_chat_message('bot', f"Great choice! Here are the available co-living spaces in {area}:")
-                    st.rerun()
-        
-        # Show condo selection
-        if st.session_state.show_condo_selection:
-            st.markdown(f"**Available properties in {st.session_state.selected_area}:**")
-            condos = AREAS_CONDOS[st.session_state.selected_area]
-            for condo in condos:
-                if st.button(condo, key=f"chat_condo_{condo}"):
-                    st.session_state.selected_condo = condo
-                    st.session_state.show_condo_selection = False
-                    st.session_state.show_form = True
-                    add_chat_message('user', condo)
-                    add_chat_message('bot', f"Perfect! You've selected {condo}. Please fill out this form:")
-                    st.rerun()
-        
-        # Show inquiry form
-        if st.session_state.show_form:
-            with st.form("chat_inquiry_form"):
-                st.markdown("**📋 Quick Inquiry Form**")
-                
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    budget = st.selectbox("Budget Range *", 
-                                         ["RM 500-700", "RM 700-900", "RM 900-1200", "RM 1200+"])
-                    pax = st.radio("How many pax? *", ["1", "2", "More than 2"])
-                    move_in_date = st.date_input("Move-in Date *")
-                
-                with col_b:
-                    nationality = st.radio("Nationality *", ["Malaysia", "Others"])
-                    if nationality == "Others":
-                        nationality_specify = st.text_input("Please specify:")
-                    gender = st.radio("Gender *", ["Male", "Female"])
-                
-                submitted = st.form_submit_button("Submit & Calculate ALPS Score")
-                
-                if submitted:
-                    # Store user data
-                    st.session_state.chat_user_data = {
-                        'area': st.session_state.selected_area,
-                        'condo': st.session_state.selected_condo,
-                        'budget': budget,
-                        'pax': pax,
-                        'move_in_date': move_in_date,
-                        'nationality': nationality if nationality == "Malaysia" else nationality_specify if 'nationality_specify' in locals() else "Others",
-                        'gender': gender
-                    }
-                    
-                    st.session_state.show_form = False
-                    st.session_state.show_alps_calculation = True
-                    
-                    add_chat_message('bot', "✅ Form submitted! Calculating ALPS score and routing to best agent...")
-                    st.rerun()
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Chat input
-        with st.form("chat_input", clear_on_submit=True):
-            col_input, col_send = st.columns([4, 1])
-            with col_input:
-                user_input = st.text_input("Type your message...", label_visibility="collapsed")
-            with col_send:
-                send_clicked = st.form_submit_button("Send")
-            
-            if send_clicked and user_input:
-                add_chat_message('user', user_input)
-                
-                if 'hi' in user_input.lower() and st.session_state.chat_stage == 'initial':
-                    st.session_state.chat_stage = 'ask_area'
-                    st.session_state.show_area_selection = True
-                    response = """Hello! Welcome to BeLive Co-Living! 👋
-
-I'm here to help you find your perfect co-living space.
-
-Which area are you interested in?"""
-                    add_chat_message('bot', response)
-                else:
-                    add_chat_message('bot', "Hi there! Type 'Hi' to start finding your perfect co-living space!")
-                st.rerun()
-    
-    with col2:
-        st.subheader("🔥 Real-time ALPS Analysis")
-        
-        if st.session_state.show_alps_calculation and st.session_state.chat_user_data:
-            # Calculate ALPS score
-            alps_score, score_breakdown = calculate_alps_score(st.session_state.chat_user_data)
-            lead_temp, temp_color = determine_lead_temperature(alps_score)
-            assigned_agent = assign_agent(lead_temp)
-            
-            # Display ALPS score
-            st.markdown(f"""
-            <div style="background-color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 3px solid {temp_color};">
-                <h2 style="color: {temp_color}; margin: 0;">ALPS Score: {alps_score}/100</h2>
-                <h3 style="color: {temp_color}; margin: 5px 0;">🔥 {lead_temp} Lead</h3>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Score breakdown
-            st.subheader("📊 Score Breakdown")
-            for criteria, score in score_breakdown.items():
-                st.metric(criteria, f"{score} points")
-            
-            # Smart routing result
-            st.subheader("🎯 Smart Routing Result")
-            st.success(f"**Assigned to:** {assigned_agent}")
-            
-            # Lead details
-            st.subheader("📋 Lead Details")
-            user_data = st.session_state.chat_user_data
-            st.write(f"**Location:** {user_data['area']} - {user_data['condo']}")
-            st.write(f"**Budget:** {user_data['budget']}")
-            st.write(f"**Move-in:** {user_data['move_in_date']}")
-            st.write(f"**Nationality:** {user_data['nationality']}")
-            
-            # Add to sample data button
-            if st.button("💾 Add to Database", type="primary"):
-                # Add this lead to sample data
-                days_to_move = (user_data['move_in_date'] - datetime.now().date()).days
-                
-                new_lead = {
-                    'Lead_ID': f'L{len(st.session_state.sample_data)+1:03d}',
-                    'Timestamp': datetime.now(),
-                    'Move_In_Date': user_data['move_in_date'],
-                    'Days_To_Move': days_to_move,
-                    'Budget_Range': user_data['budget'],
-                    'Nationality': user_data['nationality'],
-                    'Source': 'Live Chat Demo',
-                    'Location': user_data['area'],
-                    'ALPS_Score': alps_score,
-                    'Lead_Temperature': lead_temp,
-                    'Assigned_Agent': assigned_agent,
-                    'Response_Time_Min': np.random.exponential(3),
-                    'SLA_Target_Min': 2 if lead_temp == 'Hot' else 5 if lead_temp == 'Warm' else 10,
-                    'SLA_Met': True,
-                    'Status': 'New'
-                }
-                
-                st.session_state.sample_data = pd.concat([
-                    st.session_state.sample_data, 
-                    pd.DataFrame([new_lead])
-                ], ignore_index=True)
-                
-                st.success("✅ Lead added to database! Check other tabs to see updated analytics.")
-                
-                # Reset chat
-                st.session_state.chat_messages = []
-                st.session_state.chat_stage = 'initial'
-                st.session_state.chat_user_data = {}
-                st.session_state.show_area_selection = False
-                st.session_state.show_condo_selection = False
-                st.session_state.show_form = False
-                st.session_state.show_alps_calculation = False
-                st.session_state.selected_area = None
-                st.session_state.selected_condo = None
-                
-                # Add initial message
-                add_chat_message('bot', """Welcome to BeLive Co-Living! 🏠
-
-We're excited to help you find your perfect co-living space in Kuala Lumpur.
-
-Type 'Hi' to get started!""")
-                
-                st.rerun()
-        
-        else:
-            st.info("💡 Start a chat conversation to see real-time ALPS scoring and smart routing in action!")
-            
-            st.markdown("""
-            **How it works:**
-            1. 💬 Customer starts chat 
-            2. 📍 Selects area & property
-            3. 📋 Fills inquiry form
-            4. 🔥 ALPS calculates lead score
-            5. 🎯 Smart routing assigns agent
-            6. 📊 Data flows to analytics
-            """)
+        st.rerun()
 
 with tab2:
     st.header("📊 Business Overview")
@@ -1037,7 +815,7 @@ with tab2:
         )
         st.plotly_chart(fig_scatter, use_container_width=True)
 
-with tab2:
+with tab3:
     st.header("🔥 ALPS Scoring Analysis")
     
     # ALPS criteria weights
@@ -1105,7 +883,7 @@ with tab2:
     ]
     st.dataframe(top_leads, use_container_width=True)
 
-with tab3:
+with tab4:
     st.header("🎯 Smart Routing Performance")
     
     # Routing metrics
@@ -1174,7 +952,7 @@ with tab3:
     sla_by_agent['SLA_Rate_%'] = (sla_by_agent['SLA_Met'] / sla_by_agent['Total_Leads'] * 100).round(1)
     st.dataframe(sla_by_agent, use_container_width=True)
 
-with tab4:
+with tab5:
     st.header("👥 Agent Performance Dashboard")
     
     # Agent performance metrics
@@ -1233,7 +1011,7 @@ with tab4:
     fig_perf.update_traces(textposition="middle center")
     st.plotly_chart(fig_perf, use_container_width=True)
 
-with tab5:
+with tab6:
     st.header("📈 Business Analytics & Insights")
     
     # Time series analysis
