@@ -216,21 +216,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header with option to replace with your image
+st.image("belivelogo.webp", use_container_width=True)
+
+# Temporary header with smaller logo
 st.markdown("""
-<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 20px; border-radius: 10px; margin-bottom: 10px; text-align: center;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-        <div style="font-size: 48px; font-weight: bold; color: white;">
-            <span style="color: #4ECDC4; background: white; padding: 5px 10px; border-radius: 10px; margin-right: 5px;">be</span><span style="color: #FF7F50; background: white; padding: 5px 10px; border-radius: 10px;">live</span>
+<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 15px; border-radius: 10px; margin-bottom: 10px; text-align: center;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <div style="font-size: 24px; font-weight: bold; color: white;">
+            <span style="color: #4ECDC4; background: white; padding: 3px 8px; border-radius: 8px; margin-right: 3px;">be</span><span style="color: #FF7F50; background: white; padding: 3px 8px; border-radius: 8px;">live</span>
         </div>
+        <h1 style="color: white; margin: 0; font-size: 24px;">ALPS Dashboard</h1>
     </div>
-    <h1 style="color: white; margin: 10px 0 0 0; font-size: 28px;">ALPS Dashboard</h1>
-    <p style="color: white; margin: 5px 0 0 0; opacity: 0.9;">Automated Lead Prioritization System</p>
+    <p style="color: white; margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Automated Lead Prioritization System</p>
 </div>
 """, unsafe_allow_html=True)
-
-# TO REPLACE WITH YOUR IMAGE, USE THIS CODE INSTEAD:
-st.image("belivelogo.webp", use_column_width=True)
 
 # Get base data
 df = st.session_state.sample_data
@@ -571,14 +570,14 @@ Calculating ALPS score and routing to best agent..."""
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        # Chat Header with brand colors - moved up
+        # Chat Header with smaller brand logo
         st.markdown('''
-        <div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <span style="color: #4ECDC4; background: white; padding: 2px 6px; border-radius: 5px; font-weight: bold; font-size: 14px;">be</span><span style="color: #FF7F50; background: white; padding: 2px 6px; border-radius: 5px; font-weight: bold; font-size: 14px;">live</span>
-                <span style="margin-left: 10px;">Co-Living</span>
+        <div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); color: white; padding: 12px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span style="color: #4ECDC4; background: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">be</span><span style="color: #FF7F50; background: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">live</span>
+                <span style="margin-left: 8px; font-size: 16px;">Co-Living</span>
             </div>
-            <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">Customer Service Chat</p>
+            <p style="margin: 3px 0 0 0; font-size: 11px; opacity: 0.9;">Customer Service Chat</p>
         </div>
         ''', unsafe_allow_html=True)
         
