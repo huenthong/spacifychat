@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="BeLive ALPS Dashboard",
     page_icon="🏠",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Initialize sample data if not exists
@@ -168,36 +168,6 @@ st.markdown("""
     <p style="color: white; text-align: center; margin: 5px 0 0 0;">Automated Lead Prioritization System</p>
 </div>
 """, unsafe_allow_html=True)
-
-# Sidebar for chat demo info only
-st.sidebar.header("💬 Live Chat Demo")
-st.sidebar.markdown("""
-### How the AI System Works:
-
-**Step 1: Lead Capture**
-- Customer starts chat conversation
-- Selects preferred area & property
-- Fills detailed inquiry form
-
-**Step 2: ALPS Scoring**
-- Move-in timeline: 35%
-- Budget range: 25% 
-- Nationality: 20%
-- Lead source: 10%
-- Location match: 6%
-- Convenience: 4%
-
-**Step 3: Smart Routing**
-- Hot leads → Top Sales agents
-- Warm leads → Senior agents
-- Cold leads → Junior agents
-- SLA monitoring & auto-escalation
-
-**Step 4: Analytics**
-- Real-time performance tracking
-- Business intelligence insights
-- Agent performance metrics
-""")
 
 # Get base data
 df = st.session_state.sample_data
@@ -534,15 +504,15 @@ Calculating ALPS score and routing to best agent..."""
         else:
             return np.random.choice(['Amy (Senior)', 'David (Senior)', 'Lisa (Junior)', 'Mike (Junior)'])
     
-    # Create two columns for chat and ALPS analysis
-    col1, col2 = st.columns([3, 2])
+    # Create layout for chat demo
+    col1, col2 = st.columns([2, 1])
     
     with col1:
         # Chat Header
         st.markdown('<div style="background-color: #075e54; color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;"><h3 style="margin: 0;">🏠 BeLive Co-Living</h3><p style="margin: 5px 0 0 0;">Customer Service Chat</p></div>', unsafe_allow_html=True)
         
         # Main chat container
-        st.markdown('<div style="background-color: #e5ddd5; height: 500px; overflow-y: auto; padding: 20px; margin: 0;">', unsafe_allow_html=True)
+        st.markdown('<div style="background-color: #e5ddd5; height: 600px; overflow-y: auto; padding: 20px; margin: 0;">', unsafe_allow_html=True)
         
         # Display chat messages
         for message in st.session_state.chat_messages:
@@ -911,27 +881,35 @@ with tab3:
     col1, col2 = st.columns(2)
     
     with col1:
-        # Budget vs Score
-        fig_budget = px.box(
-            filtered_df_alps,
+        # Budget vs Score - Change from box plot to bar chart
+        budget_avg_scores = filtered_df_alps.groupby(['Budget_Range', 'Lead_Temperature'])['ALPS_Score'].mean().reset_index()
+        fig_budget = px.bar(
+            budget_avg_scores,
             x='Budget_Range',
             y='ALPS_Score',
             color='Lead_Temperature',
-            title="ALPS Score by Budget Range",
-            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
+            title="Average ALPS Score by Budget Range",
+            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'},
+            text='ALPS_Score'
         )
+        fig_budget.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+        fig_budget.update_layout(yaxis_range=[0, 100])
         st.plotly_chart(fig_budget, use_container_width=True)
     
     with col2:
-        # Nationality vs Score
-        fig_nat_score = px.box(
-            filtered_df_alps,
+        # Nationality vs Score - Change from box plot to bar chart
+        nat_avg_scores = filtered_df_alps.groupby(['Nationality', 'Lead_Temperature'])['ALPS_Score'].mean().reset_index()
+        fig_nat_score = px.bar(
+            nat_avg_scores,
             x='Nationality',
             y='ALPS_Score',
             color='Lead_Temperature',
-            title="ALPS Score by Nationality",
-            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
+            title="Average ALPS Score by Nationality",
+            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'},
+            text='ALPS_Score'
         )
+        fig_nat_score.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+        fig_nat_score.update_layout(yaxis_range=[0, 100])
         fig_nat_score.update_xaxes(tickangle=45)
         st.plotly_chart(fig_nat_score, use_container_width=True)
     
@@ -1049,20 +1027,25 @@ with tab4:
             st.info("No data available for the selected filters.")
     
     with col2:
-        # Response time by lead temperature
+        # Response time by lead temperature - Change from box plot to bar chart
         if len(filtered_df_routing) > 0:
-            fig_response = px.box(
-                filtered_df_routing,
+            response_avg = filtered_df_routing.groupby('Lead_Temperature')['Response_Time_Min'].mean().reset_index()
+            fig_response = px.bar(
+                response_avg,
                 x='Lead_Temperature',
                 y='Response_Time_Min',
                 color='Lead_Temperature',
-                title="Response Time by Lead Temperature",
-                color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
+                title="Average Response Time by Lead Temperature",
+                color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'},
+                text='Response_Time_Min'
             )
-            # Add SLA target lines
-            fig_response.add_hline(y=2, line_dash="dash", line_color="red", annotation_text="Hot SLA (2 min)")
-            fig_response.add_hline(y=5, line_dash="dash", line_color="orange", annotation_text="Warm SLA (5 min)")
-            fig_response.add_hline(y=10, line_dash="dash", line_color="blue", annotation_text="Cold SLA (10 min)")
+            fig_response.update_traces(texttemplate='%{text:.1f} min', textposition='outside')
+            
+            # Add SLA target reference lines as annotations
+            fig_response.add_hline(y=2, line_dash="dash", line_color="red", annotation_text="Hot SLA Target (2 min)", annotation_position="top right")
+            fig_response.add_hline(y=5, line_dash="dash", line_color="orange", annotation_text="Warm SLA Target (5 min)", annotation_position="top right")
+            fig_response.add_hline(y=10, line_dash="dash", line_color="blue", annotation_text="Cold SLA Target (10 min)", annotation_position="top right")
+            
             st.plotly_chart(fig_response, use_container_width=True)
         else:
             st.info("No data available for the selected filters.")
