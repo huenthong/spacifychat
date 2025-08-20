@@ -2,3 +2,6 @@ plotly
 scikit-learn
 openpyxl
 python-dateutil
+joblib
+dill
+cloudpickle
