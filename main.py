@@ -217,7 +217,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header - TO REPLACE WITH YOUR LOGO IMAGE, UNCOMMENT BELOW:
-# st.image("your_logo.webp", use_container_width=True)
+st.image("belivelogo.webp", width=200)
 
 # Temporary header - REMOVE THIS WHEN YOU ADD YOUR IMAGE
 st.markdown("""
