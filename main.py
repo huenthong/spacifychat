@@ -732,7 +732,7 @@ We're excited to help you find your perfect co-living space in Kuala Lumpur.
 
 Type 'Hi' to get started!"""
         add_chat_message('bot', initial_message)
-        st.rerun() np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)'])
+        st.rerun()np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)'])
         elif lead_temp == 'Warm':
             return np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)', 'Amy (Senior)', 'David (Senior)'])
         else:
