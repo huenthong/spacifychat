@@ -585,7 +585,7 @@ Calculating ALPS score and routing to best agent..."""
     # Create layout for chat demo - full width for chat
     col1, col2 = st.columns([3, 1])
     
-    #with col1:
+    with col1:
         # Chat Header with smaller brand logo
         #st.markdown('''
         #<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); color: white; padding: 12px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;">
