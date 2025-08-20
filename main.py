@@ -169,52 +169,38 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sidebar explanation
+# Sidebar for chat demo info only
+st.sidebar.header("💬 Live Chat Demo")
 st.sidebar.markdown("""
-### 📊 Filter Purpose
+### How the AI System Works:
 
-These filters apply to the **analytics tabs** (Overview, ALPS Scoring, Smart Routing, Agent Performance, Business Analytics).
+**Step 1: Lead Capture**
+- Customer starts chat conversation
+- Selects preferred area & property
+- Fills detailed inquiry form
 
-They help you analyze historical lead data by:
-- **Date Range**: View specific time periods
-- **Lead Temperature**: Focus on Hot/Warm/Cold leads  
-- **Nationality**: Compare lead quality by country
+**Step 2: ALPS Scoring**
+- Move-in timeline: 35%
+- Budget range: 25% 
+- Nationality: 20%
+- Lead source: 10%
+- Location match: 6%
+- Convenience: 4%
 
-**Note**: Filters don't affect the Live Chat Demo tab.
+**Step 3: Smart Routing**
+- Hot leads → Top Sales agents
+- Warm leads → Senior agents
+- Cold leads → Junior agents
+- SLA monitoring & auto-escalation
+
+**Step 4: Analytics**
+- Real-time performance tracking
+- Business intelligence insights
+- Agent performance metrics
 """)
 
-st.sidebar.header("🔧 Analytics Filters")
+# Get base data
 df = st.session_state.sample_data
-
-# Date filter
-date_range = st.sidebar.date_input(
-    "Date Range",
-    value=(df['Timestamp'].min().date(), df['Timestamp'].max().date()),
-    min_value=df['Timestamp'].min().date(),
-    max_value=df['Timestamp'].max().date()
-)
-
-# Lead temperature filter
-temp_filter = st.sidebar.multiselect(
-    "Lead Temperature",
-    options=['Hot', 'Warm', 'Cold'],
-    default=['Hot', 'Warm', 'Cold']
-)
-
-# Nationality filter
-nat_filter = st.sidebar.multiselect(
-    "Nationality",
-    options=df['Nationality'].unique(),
-    default=df['Nationality'].unique()
-)
-
-# Filter data
-filtered_df = df[
-    (df['Timestamp'].dt.date >= date_range[0]) &
-    (df['Timestamp'].dt.date <= date_range[1]) &
-    (df['Lead_Temperature'].isin(temp_filter)) &
-    (df['Nationality'].isin(nat_filter))
-]
 
 # Main tabs
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -735,6 +721,41 @@ Type 'Hi' to get started!"""
 with tab2:
     st.header("📊 Business Overview")
     
+    # Filters for this tab
+    col_filter1, col_filter2, col_filter3 = st.columns(3)
+    
+    with col_filter1:
+        date_range = st.date_input(
+            "📅 Date Range",
+            value=(df['Timestamp'].min().date(), df['Timestamp'].max().date()),
+            min_value=df['Timestamp'].min().date(),
+            max_value=df['Timestamp'].max().date()
+        )
+    
+    with col_filter2:
+        temp_filter = st.multiselect(
+            "🔥 Lead Temperature",
+            options=['Hot', 'Warm', 'Cold'],
+            default=['Hot', 'Warm', 'Cold']
+        )
+    
+    with col_filter3:
+        nat_filter = st.multiselect(
+            "🌍 Nationality",
+            options=df['Nationality'].unique(),
+            default=df['Nationality'].unique()
+        )
+    
+    # Filter data for this tab
+    filtered_df = df[
+        (df['Timestamp'].dt.date >= date_range[0]) &
+        (df['Timestamp'].dt.date <= date_range[1]) &
+        (df['Lead_Temperature'].isin(temp_filter)) &
+        (df['Nationality'].isin(nat_filter))
+    ]
+    
+    st.markdown("---")
+    
     # KPI metrics
     col1, col2, col3, col4, col5 = st.columns(5)
     
@@ -744,18 +765,18 @@ with tab2:
     
     with col2:
         hot_leads = len(filtered_df[filtered_df['Lead_Temperature'] == 'Hot'])
-        st.metric("Hot Leads", hot_leads, delta=f"{hot_leads/total_leads*100:.1f}%")
+        st.metric("Hot Leads", hot_leads, delta=f"{hot_leads/total_leads*100:.1f}%" if total_leads > 0 else "0%")
     
     with col3:
-        avg_score = filtered_df['ALPS_Score'].mean()
+        avg_score = filtered_df['ALPS_Score'].mean() if len(filtered_df) > 0 else 0
         st.metric("Avg ALPS Score", f"{avg_score:.1f}")
     
     with col4:
-        sla_rate = (filtered_df['SLA_Met'].sum() / len(filtered_df) * 100)
+        sla_rate = (filtered_df['SLA_Met'].sum() / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
         st.metric("SLA Compliance", f"{sla_rate:.1f}%")
     
     with col5:
-        conversion_rate = len(filtered_df[filtered_df['Status'] == 'Closed Won']) / total_leads * 100
+        conversion_rate = len(filtered_df[filtered_df['Status'] == 'Closed Won']) / total_leads * 100 if total_leads > 0 else 0
         st.metric("Conversion Rate", f"{conversion_rate:.1f}%")
     
     st.markdown("---")
@@ -818,6 +839,44 @@ with tab2:
 with tab3:
     st.header("🔥 ALPS Scoring Analysis")
     
+    # Filters for this tab
+    col_filter1, col_filter2, col_filter3 = st.columns(3)
+    
+    with col_filter1:
+        date_range_alps = st.date_input(
+            "📅 Date Range",
+            value=(df['Timestamp'].min().date(), df['Timestamp'].max().date()),
+            min_value=df['Timestamp'].min().date(),
+            max_value=df['Timestamp'].max().date(),
+            key="alps_date"
+        )
+    
+    with col_filter2:
+        temp_filter_alps = st.multiselect(
+            "🔥 Lead Temperature",
+            options=['Hot', 'Warm', 'Cold'],
+            default=['Hot', 'Warm', 'Cold'],
+            key="alps_temp"
+        )
+    
+    with col_filter3:
+        nat_filter_alps = st.multiselect(
+            "🌍 Nationality",
+            options=df['Nationality'].unique(),
+            default=df['Nationality'].unique(),
+            key="alps_nat"
+        )
+    
+    # Filter data for this tab
+    filtered_df_alps = df[
+        (df['Timestamp'].dt.date >= date_range_alps[0]) &
+        (df['Timestamp'].dt.date <= date_range_alps[1]) &
+        (df['Lead_Temperature'].isin(temp_filter_alps)) &
+        (df['Nationality'].isin(nat_filter_alps))
+    ]
+    
+    st.markdown("---")
+    
     # ALPS criteria weights
     st.subheader("Current ALPS Criteria Weights")
     
@@ -854,7 +913,7 @@ with tab3:
     with col1:
         # Budget vs Score
         fig_budget = px.box(
-            filtered_df,
+            filtered_df_alps,
             x='Budget_Range',
             y='ALPS_Score',
             color='Lead_Temperature',
@@ -866,7 +925,7 @@ with tab3:
     with col2:
         # Nationality vs Score
         fig_nat_score = px.box(
-            filtered_df,
+            filtered_df_alps,
             x='Nationality',
             y='ALPS_Score',
             color='Lead_Temperature',
@@ -878,34 +937,82 @@ with tab3:
     
     # Score breakdown table
     st.subheader("Top 10 Highest Scoring Leads")
-    top_leads = filtered_df.nlargest(10, 'ALPS_Score')[
-        ['Lead_ID', 'ALPS_Score', 'Lead_Temperature', 'Days_To_Move', 'Budget_Range', 'Nationality', 'Status']
-    ]
-    st.dataframe(top_leads, use_container_width=True)
+    if len(filtered_df_alps) > 0:
+        top_leads = filtered_df_alps.nlargest(10, 'ALPS_Score')[
+            ['Lead_ID', 'ALPS_Score', 'Lead_Temperature', 'Days_To_Move', 'Budget_Range', 'Nationality', 'Status']
+        ]
+        st.dataframe(top_leads, use_container_width=True)
+    else:
+        st.info("No data available for the selected filters.")
 
 with tab4:
     st.header("🎯 Smart Routing Performance")
+    
+    # Filters for this tab
+    col_filter1, col_filter2, col_filter3 = st.columns(3)
+    
+    with col_filter1:
+        date_range_routing = st.date_input(
+            "📅 Date Range",
+            value=(df['Timestamp'].min().date(), df['Timestamp'].max().date()),
+            min_value=df['Timestamp'].min().date(),
+            max_value=df['Timestamp'].max().date(),
+            key="routing_date"
+        )
+    
+    with col_filter2:
+        temp_filter_routing = st.multiselect(
+            "🔥 Lead Temperature",
+            options=['Hot', 'Warm', 'Cold'],
+            default=['Hot', 'Warm', 'Cold'],
+            key="routing_temp"
+        )
+    
+    with col_filter3:
+        agent_filter = st.multiselect(
+            "👥 Select Agents",
+            options=df['Assigned_Agent'].unique(),
+            default=df['Assigned_Agent'].unique(),
+            key="routing_agent"
+        )
+    
+    # Filter data for this tab
+    filtered_df_routing = df[
+        (df['Timestamp'].dt.date >= date_range_routing[0]) &
+        (df['Timestamp'].dt.date <= date_range_routing[1]) &
+        (df['Lead_Temperature'].isin(temp_filter_routing)) &
+        (df['Assigned_Agent'].isin(agent_filter))
+    ]
+    
+    st.markdown("---")
     
     # Routing metrics
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        avg_response = filtered_df['Response_Time_Min'].mean()
+        avg_response = filtered_df_routing['Response_Time_Min'].mean() if len(filtered_df_routing) > 0 else 0
         st.metric("Avg Response Time", f"{avg_response:.1f} min")
     
     with col2:
-        sla_breaches = len(filtered_df[~filtered_df['SLA_Met']])
+        sla_breaches = len(filtered_df_routing[~filtered_df_routing['SLA_Met']])
         st.metric("SLA Breaches", sla_breaches)
     
     with col3:
-        hot_to_top_sales = len(filtered_df[
-            (filtered_df['Lead_Temperature'] == 'Hot') & 
-            (filtered_df['Assigned_Agent'].str.contains('Top Sales'))
-        ]) / len(filtered_df[filtered_df['Lead_Temperature'] == 'Hot']) * 100
+        hot_leads_filtered = filtered_df_routing[filtered_df_routing['Lead_Temperature'] == 'Hot']
+        if len(hot_leads_filtered) > 0:
+            hot_to_top_sales = len(hot_leads_filtered[
+                hot_leads_filtered['Assigned_Agent'].str.contains('Top Sales')
+            ]) / len(hot_leads_filtered) * 100
+        else:
+            hot_to_top_sales = 0
         st.metric("Hot → Top Sales %", f"{hot_to_top_sales:.1f}%")
     
     with col4:
-        fairness_score = 100 - (filtered_df.groupby('Assigned_Agent').size().std() / filtered_df.groupby('Assigned_Agent').size().mean() * 100)
+        agent_counts = filtered_df_routing.groupby('Assigned_Agent').size()
+        if len(agent_counts) > 0:
+            fairness_score = 100 - (agent_counts.std() / agent_counts.mean() * 100)
+        else:
+            fairness_score = 100
         st.metric("Fairness Score", f"{fairness_score:.1f}%")
     
     st.markdown("---")
@@ -915,134 +1022,237 @@ with tab4:
     
     with col1:
         # Agent assignment by lead temperature
-        agent_temp = pd.crosstab(filtered_df['Assigned_Agent'], filtered_df['Lead_Temperature'])
-        fig_agent = px.bar(
-            agent_temp.reset_index(),
-            x='Assigned_Agent',
-            y=['Hot', 'Warm', 'Cold'],
-            title="Agent Assignment by Lead Temperature",
-            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
-        )
-        fig_agent.update_xaxes(tickangle=45)
-        st.plotly_chart(fig_agent, use_container_width=True)
+        if len(filtered_df_routing) > 0:
+            agent_temp = pd.crosstab(filtered_df_routing['Assigned_Agent'], filtered_df_routing['Lead_Temperature'])
+            agent_temp_reset = agent_temp.reset_index()
+            
+            # Melt the data for plotly
+            agent_temp_melted = pd.melt(
+                agent_temp_reset, 
+                id_vars=['Assigned_Agent'], 
+                value_vars=[col for col in ['Hot', 'Warm', 'Cold'] if col in agent_temp.columns],
+                var_name='Lead_Temperature', 
+                value_name='Count'
+            )
+            
+            fig_agent = px.bar(
+                agent_temp_melted,
+                x='Assigned_Agent',
+                y='Count',
+                color='Lead_Temperature',
+                title="Agent Assignment by Lead Temperature",
+                color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
+            )
+            fig_agent.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_agent, use_container_width=True)
+        else:
+            st.info("No data available for the selected filters.")
     
     with col2:
         # Response time by lead temperature
-        fig_response = px.box(
-            filtered_df,
-            x='Lead_Temperature',
-            y='Response_Time_Min',
-            color='Lead_Temperature',
-            title="Response Time by Lead Temperature",
-            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
-        )
-        # Add SLA target lines
-        fig_response.add_hline(y=2, line_dash="dash", line_color="red", annotation_text="Hot SLA (2 min)")
-        fig_response.add_hline(y=5, line_dash="dash", line_color="orange", annotation_text="Warm SLA (5 min)")
-        fig_response.add_hline(y=10, line_dash="dash", line_color="blue", annotation_text="Cold SLA (10 min)")
-        st.plotly_chart(fig_response, use_container_width=True)
+        if len(filtered_df_routing) > 0:
+            fig_response = px.box(
+                filtered_df_routing,
+                x='Lead_Temperature',
+                y='Response_Time_Min',
+                color='Lead_Temperature',
+                title="Response Time by Lead Temperature",
+                color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
+            )
+            # Add SLA target lines
+            fig_response.add_hline(y=2, line_dash="dash", line_color="red", annotation_text="Hot SLA (2 min)")
+            fig_response.add_hline(y=5, line_dash="dash", line_color="orange", annotation_text="Warm SLA (5 min)")
+            fig_response.add_hline(y=10, line_dash="dash", line_color="blue", annotation_text="Cold SLA (10 min)")
+            st.plotly_chart(fig_response, use_container_width=True)
+        else:
+            st.info("No data available for the selected filters.")
     
     # SLA compliance details
     st.subheader("SLA Compliance by Agent")
-    sla_by_agent = filtered_df.groupby('Assigned_Agent').agg({
-        'SLA_Met': ['count', 'sum'],
-        'Response_Time_Min': 'mean'
-    }).round(2)
-    sla_by_agent.columns = ['Total_Leads', 'SLA_Met', 'Avg_Response_Time']
-    sla_by_agent['SLA_Rate_%'] = (sla_by_agent['SLA_Met'] / sla_by_agent['Total_Leads'] * 100).round(1)
-    st.dataframe(sla_by_agent, use_container_width=True)
+    if len(filtered_df_routing) > 0:
+        sla_by_agent = filtered_df_routing.groupby('Assigned_Agent').agg({
+            'SLA_Met': ['count', 'sum'],
+            'Response_Time_Min': 'mean'
+        }).round(2)
+        sla_by_agent.columns = ['Total_Leads', 'SLA_Met', 'Avg_Response_Time']
+        sla_by_agent['SLA_Rate_%'] = (sla_by_agent['SLA_Met'] / sla_by_agent['Total_Leads'] * 100).round(1)
+        st.dataframe(sla_by_agent, use_container_width=True)
+    else:
+        st.info("No data available for the selected filters.")
 
 with tab5:
     st.header("👥 Agent Performance Dashboard")
     
-    # Agent performance metrics
-    agent_performance = filtered_df.groupby('Assigned_Agent').agg({
-        'Lead_ID': 'count',
-        'ALPS_Score': 'mean',
-        'Response_Time_Min': 'mean',
-        'SLA_Met': lambda x: (x.sum() / len(x) * 100),
-        'Status': lambda x: (x == 'Closed Won').sum()
-    }).round(2)
+    # Filters for this tab
+    col_filter1, col_filter2, col_filter3 = st.columns(3)
     
-    agent_performance.columns = ['Total_Leads', 'Avg_ALPS_Score', 'Avg_Response_Time', 'SLA_Rate_%', 'Conversions']
-    agent_performance['Conversion_Rate_%'] = (agent_performance['Conversions'] / agent_performance['Total_Leads'] * 100).round(1)
-    
-    st.subheader("Agent Performance Summary")
-    st.dataframe(agent_performance, use_container_width=True)
-    
-    # Performance charts
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Leads handled per agent
-        fig_leads = px.bar(
-            agent_performance.reset_index(),
-            x='Assigned_Agent',
-            y='Total_Leads',
-            title="Total Leads Handled by Agent",
-            color='Total_Leads'
+    with col_filter1:
+        date_range_agent = st.date_input(
+            "📅 Date Range",
+            value=(df['Timestamp'].min().date(), df['Timestamp'].max().date()),
+            min_value=df['Timestamp'].min().date(),
+            max_value=df['Timestamp'].max().date(),
+            key="agent_date"
         )
-        fig_leads.update_xaxes(tickangle=45)
-        st.plotly_chart(fig_leads, use_container_width=True)
     
-    with col2:
-        # Conversion rate per agent
-        fig_conversion = px.bar(
+    with col_filter2:
+        agent_filter_perf = st.multiselect(
+            "👥 Select Agents",
+            options=df['Assigned_Agent'].unique(),
+            default=df['Assigned_Agent'].unique(),
+            key="agent_perf"
+        )
+    
+    with col_filter3:
+        temp_filter_agent = st.multiselect(
+            "🔥 Lead Temperature",
+            options=['Hot', 'Warm', 'Cold'],
+            default=['Hot', 'Warm', 'Cold'],
+            key="agent_temp"
+        )
+    
+    # Filter data for this tab
+    filtered_df_agent = df[
+        (df['Timestamp'].dt.date >= date_range_agent[0]) &
+        (df['Timestamp'].dt.date <= date_range_agent[1]) &
+        (df['Assigned_Agent'].isin(agent_filter_perf)) &
+        (df['Lead_Temperature'].isin(temp_filter_agent))
+    ]
+    
+    st.markdown("---")
+    
+    if len(filtered_df_agent) > 0:
+        # Agent performance metrics
+        agent_performance = filtered_df_agent.groupby('Assigned_Agent').agg({
+            'Lead_ID': 'count',
+            'ALPS_Score': 'mean',
+            'Response_Time_Min': 'mean',
+            'SLA_Met': lambda x: (x.sum() / len(x) * 100),
+            'Status': lambda x: (x == 'Closed Won').sum()
+        }).round(2)
+        
+        agent_performance.columns = ['Total_Leads', 'Avg_ALPS_Score', 'Avg_Response_Time', 'SLA_Rate_%', 'Conversions']
+        agent_performance['Conversion_Rate_%'] = (agent_performance['Conversions'] / agent_performance['Total_Leads'] * 100).round(1)
+        
+        st.subheader("Agent Performance Summary")
+        st.dataframe(agent_performance, use_container_width=True)
+        
+        # Performance charts
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Leads handled per agent
+            fig_leads = px.bar(
+                agent_performance.reset_index(),
+                x='Assigned_Agent',
+                y='Total_Leads',
+                title="Total Leads Handled by Agent",
+                color='Total_Leads'
+            )
+            fig_leads.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_leads, use_container_width=True)
+        
+        with col2:
+            # Conversion rate per agent
+            fig_conversion = px.bar(
+                agent_performance.reset_index(),
+                x='Assigned_Agent',
+                y='Conversion_Rate_%',
+                title="Conversion Rate by Agent (%)",
+                color='Conversion_Rate_%'
+            )
+            fig_conversion.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_conversion, use_container_width=True)
+        
+        # Performance scatter plot
+        fig_perf = px.scatter(
             agent_performance.reset_index(),
-            x='Assigned_Agent',
+            x='Avg_Response_Time',
             y='Conversion_Rate_%',
-            title="Conversion Rate by Agent (%)",
-            color='Conversion_Rate_%'
+            size='Total_Leads',
+            color='SLA_Rate_%',
+            text='Assigned_Agent',
+            title="Agent Performance: Response Time vs Conversion Rate",
+            labels={'Avg_Response_Time': 'Average Response Time (min)', 'Conversion_Rate_%': 'Conversion Rate (%)'}
         )
-        fig_conversion.update_xaxes(tickangle=45)
-        st.plotly_chart(fig_conversion, use_container_width=True)
-    
-    # Performance scatter plot
-    fig_perf = px.scatter(
-        agent_performance.reset_index(),
-        x='Avg_Response_Time',
-        y='Conversion_Rate_%',
-        size='Total_Leads',
-        color='SLA_Rate_%',
-        text='Assigned_Agent',
-        title="Agent Performance: Response Time vs Conversion Rate",
-        labels={'Avg_Response_Time': 'Average Response Time (min)', 'Conversion_Rate_%': 'Conversion Rate (%)'}
-    )
-    fig_perf.update_traces(textposition="middle center")
-    st.plotly_chart(fig_perf, use_container_width=True)
+        fig_perf.update_traces(textposition="middle center")
+        st.plotly_chart(fig_perf, use_container_width=True)
+    else:
+        st.info("No data available for the selected filters.")
 
 with tab6:
     st.header("📈 Business Analytics & Insights")
     
-    # Time series analysis
-    daily_leads = filtered_df.groupby(filtered_df['Timestamp'].dt.date).agg({
-        'Lead_ID': 'count',
-        'ALPS_Score': 'mean',
-        'SLA_Met': lambda x: (x.sum() / len(x) * 100)
-    }).reset_index()
-    daily_leads.columns = ['Date', 'Lead_Count', 'Avg_ALPS_Score', 'SLA_Rate']
+    # Filters for this tab
+    col_filter1, col_filter2, col_filter3 = st.columns(3)
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Daily leads trend
-        fig_daily = px.line(
-            daily_leads,
-            x='Date',
-            y='Lead_Count',
-            title="Daily Lead Volume Trend"
+    with col_filter1:
+        date_range_analytics = st.date_input(
+            "📅 Date Range",
+            value=(df['Timestamp'].min().date(), df['Timestamp'].max().date()),
+            min_value=df['Timestamp'].min().date(),
+            max_value=df['Timestamp'].max().date(),
+            key="analytics_date"
         )
-        st.plotly_chart(fig_daily, use_container_width=True)
     
-    with col2:
-        # ALPS score trend
-        fig_alps_trend = px.line(
-            daily_leads,
-            x='Date',
-            y='Avg_ALPS_Score',
-            title="Average ALPS Score Trend"
+    with col_filter2:
+        temp_filter_analytics = st.multiselect(
+            "🔥 Lead Temperature",
+            options=['Hot', 'Warm', 'Cold'],
+            default=['Hot', 'Warm', 'Cold'],
+            key="analytics_temp"
         )
-        st.plotly_chart(fig_alps_trend, use_container_width=True)
+    
+    with col_filter3:
+        nat_filter_analytics = st.multiselect(
+            "🌍 Nationality",
+            options=df['Nationality'].unique(),
+            default=df['Nationality'].unique(),
+            key="analytics_nat"
+        )
+    
+    # Filter data for this tab
+    filtered_df_analytics = df[
+        (df['Timestamp'].dt.date >= date_range_analytics[0]) &
+        (df['Timestamp'].dt.date <= date_range_analytics[1]) &
+        (df['Lead_Temperature'].isin(temp_filter_analytics)) &
+        (df['Nationality'].isin(nat_filter_analytics))
+    ]
+    
+    st.markdown("---")
+    
+    if len(filtered_df_analytics) > 0:
+        # Time series analysis
+        daily_leads = filtered_df_analytics.groupby(filtered_df_analytics['Timestamp'].dt.date).agg({
+            'Lead_ID': 'count',
+            'ALPS_Score': 'mean',
+            'SLA_Met': lambda x: (x.sum() / len(x) * 100)
+        }).reset_index()
+        daily_leads.columns = ['Date', 'Lead_Count', 'Avg_ALPS_Score', 'SLA_Rate']
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Daily leads trend
+            fig_daily = px.line(
+                daily_leads,
+                x='Date',
+                y='Lead_Count',
+                title="Daily Lead Volume Trend"
+            )
+            st.plotly_chart(fig_daily, use_container_width=True)
+        
+        with col2:
+            # ALPS score trend
+            fig_alps_trend = px.line(
+                daily_leads,
+                x='Date',
+                y='Avg_ALPS_Score',
+                title="Average ALPS Score Trend"
+            )
+            st.plotly_chart(fig_alps_trend, use_container_width=True)
+    else:
+        st.info("No data available for the selected filters.")
     
     # Business insights
     st.subheader("🔍 Key Business Insights")
@@ -1082,17 +1292,20 @@ with tab6:
     # Correlation analysis
     st.subheader("📊 Criteria Correlation Analysis")
     
-    # Create correlation matrix
-    numeric_cols = ['ALPS_Score', 'Days_To_Move', 'Response_Time_Min']
-    correlation_data = filtered_df[numeric_cols].corr()
-    
-    fig_corr = px.imshow(
-        correlation_data,
-        title="Correlation Matrix: Key Metrics",
-        color_continuous_scale="RdBu",
-        aspect="auto"
-    )
-    st.plotly_chart(fig_corr, use_container_width=True)
+    if len(filtered_df_analytics) > 0:
+        # Create correlation matrix
+        numeric_cols = ['ALPS_Score', 'Days_To_Move', 'Response_Time_Min']
+        correlation_data = filtered_df_analytics[numeric_cols].corr()
+        
+        fig_corr = px.imshow(
+            correlation_data,
+            title="Correlation Matrix: Key Metrics",
+            color_continuous_scale="RdBu",
+            aspect="auto"
+        )
+        st.plotly_chart(fig_corr, use_container_width=True)
+    else:
+        st.info("No data available for correlation analysis.")
 
 # Footer
 st.markdown("---")
