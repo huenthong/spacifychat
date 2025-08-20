@@ -548,10 +548,6 @@ Calculating ALPS score and routing to best agent..."""
         elif lead_temp == 'Warm':
             return np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)', 'Amy (Senior)', 'David (Senior)'])
         else:
-            return np.random.choice(['Amy (Senior)', 'David (Senior)', 'Lisa (Junior)', 'Mike (Junior)']) np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)'])
-        elif lead_temp == 'Warm':
-            return np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)', 'Amy (Senior)', 'David (Senior)'])
-        else:
             return np.random.choice(['Amy (Senior)', 'David (Senior)', 'Lisa (Junior)', 'Mike (Junior)'])
     
     # Create two columns for chat and ALPS analysis
