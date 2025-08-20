@@ -228,6 +228,8 @@ div[data-testid="stVerticalBlock"] { gap: 4px !important; }
   display: block;
 }
 
+.chat-scroll { padding: 6px 20px 12px; height: 600px; }
+
 </style>
 """, unsafe_allow_html=True)
 
