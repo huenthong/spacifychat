@@ -216,17 +216,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-#st.image("belivelogo.webp", use_container_width=True)
+# Header - TO REPLACE WITH YOUR LOGO IMAGE, UNCOMMENT BELOW:
+# st.image("your_logo.webp", use_container_width=True)
 
-# Temporary header with smaller logo
+# Temporary header - REMOVE THIS WHEN YOU ADD YOUR IMAGE
 st.markdown("""
-<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 15px; border-radius: 10px; margin-bottom: 10px; text-align: center;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <div style="font-size: 24px; font-weight: bold; color: white;">
-            <span style="color: #4ECDC4; background: white; padding: 3px 8px; border-radius: 8px; margin-right: 3px;">be</span><span style="color: #FF7F50; background: white; padding: 3px 8px; border-radius: 8px;">live</span>
-        </div>
-        <h1 style="color: white; margin: 0; font-size: 24px;">ALPS Dashboard</h1>
-    </div>
+<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 15px; border-radius: 10px; margin-bottom: 5px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">🏠 BeLive ALPS Dashboard</h1>
     <p style="color: white; margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Automated Lead Prioritization System</p>
 </div>
 """, unsafe_allow_html=True)
@@ -581,8 +577,8 @@ Calculating ALPS score and routing to best agent..."""
         </div>
         ''', unsafe_allow_html=True)
         
-        # Main chat container - no extra background, uses page background
-        st.markdown('<div style="height: 650px; overflow-y: auto; padding: 20px; margin: 0; background: transparent;">', unsafe_allow_html=True)
+        # Main chat container - BIGGER HEIGHT, NO GAPS
+        st.markdown('<div style="height: 750px; overflow-y: auto; padding: 20px; margin: 0; background: transparent;">', unsafe_allow_html=True)
         
         # Display chat messages with brand colors
         for message in st.session_state.chat_messages:
