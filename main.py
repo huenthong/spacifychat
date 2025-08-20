@@ -170,7 +170,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar for filters
-st.sidebar.header("🔧 Filters & Controls")
+# Sidebar explanation
+st.sidebar.markdown("""
+### 📊 Filter Purpose
+
+These filters apply to the **analytics tabs** (Overview, ALPS Scoring, Smart Routing, Agent Performance, Business Analytics).
+
+They help you analyze historical lead data by:
+- **Date Range**: View specific time periods
+- **Lead Temperature**: Focus on Hot/Warm/Cold leads  
+- **Nationality**: Compare lead quality by country
+
+**Note**: Filters don't affect the Live Chat Demo tab.
+""")
+
+st.sidebar.header("🔧 Analytics Filters")
 df = st.session_state.sample_data
 
 # Date filter
@@ -238,13 +252,27 @@ with tab1:
     
     # Areas and condos data
     AREAS_CONDOS = {
-        "KL City Center": ["121 Residence", "7 Tree Seven", "Armani SOHO", "Austin Regency"],
-        "Mont Kiara": ["Mont Kiara", "Duta Park", "M Adora", "M Vertica"],
-        "Ampang": ["Acacia Residence Ampang", "Astoria Ampang", "The Azure"],
-        "Ara Damansara": ["Ara Damansara", "AraTre Residence", "Emporis Kota Damansara"],
+        "KL City Center": ["121 Residence", "7 Tree Seven", "Armani SOHO", "Austin Regency", 
+                          "Icon City", "Majestic Maxim", "One Cochrane", "Pixel City Central", 
+                          "The OOAK", "Trion KL", "Youth City"],
+        "Mont Kiara": ["Mont Kiara", "Duta Park", "M Adora", "M Vertica", 
+                      "The Andes", "Vertu Resort"],
+        "Ampang": ["Acacia Residence Ampang", "Astoria Ampang", "The Azure", 
+                  "The Azure Residences"],
+        "Ara Damansara": ["Ara Damansara", "AraTre Residence", "Emporis Kota Damansara", 
+                         "Kota Damansara"],
         "Cheras": ["Arte Cheras", "Cheras", "D'Cosmos", "Razak City Residences"],
         "Petaling Jaya": ["Parc3 Petaling Jaya", "The PARC3", "Kelana Jaya"],
-        "Others": ["Setapak", "Subang Jaya", "Sentul", "Sungai Besi"]
+        "Bukit Jalil": ["Bora Residence Bukit Jalil", "HighPark Suites", "Platinum Splendor"],
+        "Setapak": ["Setapak", "Fairview Residence", "Keramat"],
+        "Subang Jaya": ["Subang Jaya", "Sunway Avila", "Sunway Serene"],
+        "Sentul": ["Sentul", "Vista Sentul", "Sinaran Sentul"],
+        "Sungai Besi": ["Sungai Besi", "Marina Residence", "Sapphire Paradigm"],
+        "Bandar Sri Permaisuri": ["Bandar Sri Permaisuri", "Astoria", "Epic Residence"],
+        "Seri Kembangan": ["Seri Kembangan", "Secoya Residence", "Rica Residence"],
+        "Others": ["Medini Signature", "Meta City", "MH Platinum 2", "Pinnacle", 
+                  "Sinaran Residence", "The Birch", "Unio Residence", 
+                  "Vivo Executive Apartment", "Vivo Residence"]
     }
     
     def add_chat_message(sender, content):
@@ -253,6 +281,202 @@ with tab1:
             'content': content,
             'timestamp': datetime.now().strftime("%H:%M")
         })
+    
+    def process_user_input(user_input):
+        user_input_lower = user_input.lower().strip()
+        
+        if st.session_state.chat_stage == 'initial':
+            if any(greeting in user_input_lower for greeting in ['hi', 'hello', 'hey']):
+                st.session_state.chat_stage = 'ask_area'
+                st.session_state.show_area_selection = True
+                return """Hello! Welcome to BeLive Co-Living! 👋
+
+I'm here to help you find your perfect co-living space.
+
+Which area are you interested in?"""
+            else:
+                return """Hello! Welcome to BeLive Co-Living! 👋
+
+I'm here to help you find your perfect co-living space. Type 'Hi' to get started!"""
+        
+        elif st.session_state.chat_stage == 'form_completed':
+            return handle_post_form_queries(user_input_lower)
+        
+        else:
+            return "I'm here to help! What would you like to know about BeLive Co-Living?"
+
+    def handle_post_form_queries(user_input):
+        if 'yes' in user_input.lower():
+            # User confirmed budget, show room recommendations
+            return f"""Great! Here are our available room recommendations for {st.session_state.selected_condo}:
+
+🏠 **Room A102** - RM 650/month
+📍 Shared bathroom, 2 housemates
+🚗 Parking available
+
+🏠 **Room B205** - RM 750/month  
+📍 Private bathroom, 1 housemate
+🚗 Parking available
+
+🏠 **Room C301** - RM 680/month
+📍 Shared bathroom, 3 housemates
+🚗 No parking
+
+Which room interests you? Reply with the room number or say "agent" to speak with our property consultant! 🏠"""
+        
+        elif 'no' in user_input.lower():
+            return "No problem! Let me know if you'd like to explore other options or adjust your preferences."
+        
+        elif 'agent' in user_input.lower() or any(room in user_input.lower() for room in ['a102', 'b205', 'c301']):
+            return """Perfect! I'm connecting you with our property consultant now.
+
+📞 **Agent Contact:**
+🏠 **Sarah Lim** - Senior Property Consultant
+📱 WhatsApp: +60 12-345-6789
+📧 Email: sarah@belive.com.my
+
+She will contact you within 30 minutes to arrange a viewing and provide more details about the room.
+
+Thank you for choosing BeLive Co-Living! 🎉"""
+        
+        else:
+            return "Would you like to proceed with the available options within your budget range? Or would you like to speak with our agent directly?"
+
+    def display_area_selection():
+        st.markdown("### 📍 Please select your preferred area:")
+        
+        areas = list(AREAS_CONDOS.keys())
+        cols = st.columns(3)
+        
+        for i, area in enumerate(areas):
+            col_idx = i % 3
+            with cols[col_idx]:
+                if st.button(area, key=f"area_{i}", use_container_width=True):
+                    st.session_state.selected_area = area
+                    st.session_state.show_area_selection = False
+                    st.session_state.show_condo_selection = True
+                    st.session_state.chat_stage = 'area_selected'
+                    
+                    add_chat_message('user', area)
+                    add_chat_message('bot', f"Great choice! Here are the available co-living spaces in {area}:")
+                    st.rerun()
+
+    def display_condo_selection():
+        if st.session_state.selected_area:
+            st.markdown(f"### 🏠 Available properties in {st.session_state.selected_area}:")
+            
+            condos = AREAS_CONDOS[st.session_state.selected_area]
+            cols = st.columns(2)
+            
+            for i, condo in enumerate(condos):
+                col_idx = i % 2
+                with cols[col_idx]:
+                    if st.button(condo, key=f"condo_{i}", use_container_width=True):
+                        st.session_state.selected_condo = condo
+                        st.session_state.show_condo_selection = False
+                        st.session_state.show_form = True
+                        st.session_state.chat_stage = 'condo_selected'
+                        
+                        add_chat_message('user', condo)
+                        add_chat_message('bot', f"Perfect! You've selected {condo}. Please fill out this form to proceed:")
+                        st.rerun()
+
+    def display_inquiry_form():
+        with st.form("inquiry_form"):
+            st.markdown(f"### 📋 Inquiry Form - {st.session_state.selected_condo}")
+            
+            # 1. Room Budget/Type
+            budget = st.selectbox("1. Room Budget/Type *", 
+                                 ["Select budget", "RM 500-700", "RM 700-900", "RM 900-1200", "RM 1200+"])
+            
+            # 2. How many pax staying
+            pax = st.radio("2. How many pax staying? *", 
+                          ["1", "2", "More than 2"])
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # 3. Do you have a car
+                have_car = st.radio("3. Do you have a car? *", 
+                                   ["Yes", "No"])
+                
+                # 4. Need Car Park Lot
+                need_parking = st.radio("4. Need Car Park Lot? *", 
+                                       ["Yes", "No"])
+                
+                # 5. Move in date
+                move_in_date = st.date_input("5. When do you plan to move in? *")
+                
+                # 6. Tenancy Period
+                tenancy = st.radio("6. Tenancy Period *", 
+                                  ["6 months", "12 months"])
+            
+            with col2:
+                # 7. Gender
+                gender = st.radio("7. Gender *", 
+                                 ["Male", "Female"])
+                
+                # 8. Unit Specification (can choose multiple)
+                unit_spec = st.multiselect("8. Unit Specification (can select multiple) *", 
+                                          ["Female unit", "Male unit", "Mixed Gender unit"])
+                
+                # 10. Nationality
+                nationality = st.radio("10. Nationality *", 
+                                      ["Malaysia", "Others"])
+                
+                nationality_specify = ""
+                if nationality == "Others":
+                    nationality_specify = st.text_input("Please specify nationality:")
+            
+            # 9. Workplace
+            workplace = st.text_input("9. Where is your workplace? (To recommend closest property) *")
+            
+            submitted = st.form_submit_button("Submit Inquiry", use_container_width=True)
+            
+            if submitted:
+                if budget != "Select budget" and pax and workplace and unit_spec:
+                    # Store user data
+                    st.session_state.chat_user_data = {
+                        'area': st.session_state.selected_area,
+                        'condo': st.session_state.selected_condo,
+                        'budget': budget,
+                        'pax': pax,
+                        'have_car': have_car,
+                        'need_parking': need_parking,
+                        'move_in_date': move_in_date,
+                        'tenancy': tenancy,
+                        'gender': gender,
+                        'unit_spec': unit_spec,
+                        'workplace': workplace,
+                        'nationality': nationality if nationality == "Malaysia" else nationality_specify
+                    }
+                    
+                    st.session_state.show_form = False
+                    st.session_state.chat_stage = 'form_completed'
+                    st.session_state.show_alps_calculation = True
+                    
+                    # Form summary
+                    summary = f"""✅ **Form Summary**
+
+📍 **Location**: {st.session_state.selected_area} - {st.session_state.selected_condo}
+💰 **Budget**: {budget}
+👥 **Occupants**: {pax} person(s)
+🚗 **Car**: {have_car} | **Parking**: {need_parking}
+📅 **Move-in**: {move_in_date}
+📋 **Tenancy**: {tenancy}
+👤 **Gender**: {gender}
+🏠 **Unit Type**: {', '.join(unit_spec)}
+🏢 **Workplace**: {workplace}
+🌍 **Nationality**: {st.session_state.chat_user_data['nationality']}
+
+Thank you for your submission! 🎉
+
+Calculating ALPS score and routing to best agent..."""
+                    
+                    add_chat_message('bot', summary)
+                    st.rerun()
+                else:
+                    st.error("Please fill in all required fields marked with *")
     
     def calculate_alps_score(user_data):
         """Calculate ALPS score based on user data"""
@@ -321,6 +545,194 @@ with tab1:
         """Smart routing logic"""
         if lead_temp == 'Hot':
             return np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)'])
+        elif lead_temp == 'Warm':
+            return np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)', 'Amy (Senior)', 'David (Senior)'])
+        else:
+            return np.random.choice(['Amy (Senior)', 'David (Senior)', 'Lisa (Junior)', 'Mike (Junior)'])
+    
+    # Create two columns for chat and ALPS analysis
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        # Chat Header
+        st.markdown('<div style="background-color: #075e54; color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;"><h3 style="margin: 0;">🏠 BeLive Co-Living</h3><p style="margin: 5px 0 0 0;">Customer Service Chat</p></div>', unsafe_allow_html=True)
+        
+        # Main chat container
+        st.markdown('<div style="background-color: #e5ddd5; height: 500px; overflow-y: auto; padding: 20px; margin: 0;">', unsafe_allow_html=True)
+        
+        # Display chat messages
+        for message in st.session_state.chat_messages:
+            if message['sender'] == 'user':
+                st.markdown(f"""
+                <div style="background-color: #dcf8c6; margin: 8px 0; padding: 8px 12px; border-radius: 7px; 
+                           max-width: 65%; margin-left: auto; margin-right: 0; word-wrap: break-word; 
+                           float: right; clear: both; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    {message['content']}
+                    <div style="font-size: 11px; color: #666; text-align: right; margin-top: 2px;">{message['timestamp']}</div>
+                </div>
+                <div style="clear: both;"></div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="background-color: #ffffff; margin: 8px 0; padding: 8px 12px; border-radius: 7px; 
+                           max-width: 65%; margin-left: 0; margin-right: auto; word-wrap: break-word; 
+                           float: left; clear: both; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    {message['content']}
+                    <div style="font-size: 11px; color: #666; text-align: left; margin-top: 2px;">{message['timestamp']}</div>
+                </div>
+                <div style="clear: both;"></div>
+                """, unsafe_allow_html=True)
+        
+        # Show selections and forms
+        if st.session_state.show_area_selection:
+            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.9); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+            display_area_selection()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        if st.session_state.show_condo_selection:
+            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.9); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+            display_condo_selection()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        if st.session_state.show_form:
+            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.9); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+            display_inquiry_form()
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Input area
+        st.markdown('<div style="background-color: #f0f0f0; padding: 10px; border-radius: 0 0 10px 10px; border-top: 1px solid #ddd; margin: 0;">', unsafe_allow_html=True)
+        
+        with st.form("chat_input_form", clear_on_submit=True):
+            col_input, col_send = st.columns([5, 1])
+            
+            with col_input:
+                user_input = st.text_input("Type your message...", label_visibility="collapsed", placeholder="Type your message...")
+            
+            with col_send:
+                send_button = st.form_submit_button("Send", use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Handle user input
+        if send_button and user_input:
+            # Add user message
+            add_chat_message('user', user_input)
+            
+            # Process and add bot response
+            bot_response = process_user_input(user_input)
+            add_chat_message('bot', bot_response)
+            
+            # Rerun to show new messages
+            st.rerun()
+    
+    with col2:
+        st.subheader("🔥 Real-time ALPS Analysis")
+        
+        if st.session_state.show_alps_calculation and st.session_state.chat_user_data:
+            # Calculate ALPS score
+            alps_score, score_breakdown = calculate_alps_score(st.session_state.chat_user_data)
+            lead_temp, temp_color = determine_lead_temperature(alps_score)
+            assigned_agent = assign_agent(lead_temp)
+            
+            # Display ALPS score
+            st.markdown(f"""
+            <div style="background-color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 3px solid {temp_color};">
+                <h2 style="color: {temp_color}; margin: 0;">ALPS Score: {alps_score}/100</h2>
+                <h3 style="color: {temp_color}; margin: 5px 0;">🔥 {lead_temp} Lead</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Score breakdown
+            st.subheader("📊 Score Breakdown")
+            for criteria, score in score_breakdown.items():
+                st.metric(criteria, f"{score} points")
+            
+            # Smart routing result
+            st.subheader("🎯 Smart Routing Result")
+            st.success(f"**Assigned to:** {assigned_agent}")
+            
+            # Lead details
+            st.subheader("📋 Lead Details")
+            user_data = st.session_state.chat_user_data
+            st.write(f"**Location:** {user_data['area']} - {user_data['condo']}")
+            st.write(f"**Budget:** {user_data['budget']}")
+            st.write(f"**Move-in:** {user_data['move_in_date']}")
+            st.write(f"**Nationality:** {user_data['nationality']}")
+            
+            # Add to sample data button
+            if st.button("💾 Add to Database", type="primary"):
+                # Add this lead to sample data
+                days_to_move = (user_data['move_in_date'] - datetime.now().date()).days
+                
+                new_lead = {
+                    'Lead_ID': f'L{len(st.session_state.sample_data)+1:03d}',
+                    'Timestamp': datetime.now(),
+                    'Move_In_Date': user_data['move_in_date'],
+                    'Days_To_Move': days_to_move,
+                    'Budget_Range': user_data['budget'],
+                    'Nationality': user_data['nationality'],
+                    'Source': 'Live Chat Demo',
+                    'Location': user_data['area'],
+                    'ALPS_Score': alps_score,
+                    'Lead_Temperature': lead_temp,
+                    'Assigned_Agent': assigned_agent,
+                    'Response_Time_Min': np.random.exponential(3),
+                    'SLA_Target_Min': 2 if lead_temp == 'Hot' else 5 if lead_temp == 'Warm' else 10,
+                    'SLA_Met': True,
+                    'Status': 'New'
+                }
+                
+                st.session_state.sample_data = pd.concat([
+                    st.session_state.sample_data, 
+                    pd.DataFrame([new_lead])
+                ], ignore_index=True)
+                
+                st.success("✅ Lead added to database! Check other tabs to see updated analytics.")
+                
+                # Reset chat
+                st.session_state.chat_messages = []
+                st.session_state.chat_stage = 'initial'
+                st.session_state.chat_user_data = {}
+                st.session_state.show_area_selection = False
+                st.session_state.show_condo_selection = False
+                st.session_state.show_form = False
+                st.session_state.show_alps_calculation = False
+                st.session_state.selected_area = None
+                st.session_state.selected_condo = None
+                
+                # Add initial message
+                add_chat_message('bot', """Welcome to BeLive Co-Living! 🏠
+
+We're excited to help you find your perfect co-living space in Kuala Lumpur.
+
+Type 'Hi' to get started!""")
+                
+                st.rerun()
+        
+        else:
+            st.info("💡 Start a chat conversation to see real-time ALPS scoring and smart routing in action!")
+            
+            st.markdown("""
+            **How it works:**
+            1. 💬 Customer starts chat 
+            2. 📍 Selects area & property
+            3. 📋 Fills inquiry form
+            4. 🔥 ALPS calculates lead score
+            5. 🎯 Smart routing assigns agent
+            6. 📊 Data flows to analytics
+            """)
+    
+    # Initialize chat if empty
+    if not st.session_state.chat_messages:
+        initial_message = """Welcome to BeLive Co-Living! 🏠
+
+We're excited to help you find your perfect co-living space in Kuala Lumpur.
+
+Type 'Hi' to get started!"""
+        add_chat_message('bot', initial_message)
+        st.rerun() np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)'])
         elif lead_temp == 'Warm':
             return np.random.choice(['Sarah (Top Sales)', 'John (Top Sales)', 'Amy (Senior)', 'David (Senior)'])
         else:
