@@ -216,19 +216,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header with brand logo and colors
-st.markdown("""
-<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-        <div style="font-size: 48px; font-weight: bold; color: white;">
-            <span style="color: #4ECDC4; background: white; padding: 5px 10px; border-radius: 10px; margin-right: 5px;">be</span><span style="color: #FF7F50; background: white; padding: 5px 10px; border-radius: 10px;">live</span>
-        </div>
-    </div>
-    <h1 style="color: white; margin: 10px 0 0 0; font-size: 28px;">ALPS Dashboard</h1>
-    <p style="color: white; margin: 5px 0 0 0; opacity: 0.9;">Automated Lead Prioritization System</p>
-</div>
-""", unsafe_allow_html=True)
-
 # Get base data
 df = st.session_state.sample_data
 
@@ -564,11 +551,11 @@ Calculating ALPS score and routing to best agent..."""
         else:
             return np.random.choice(['Amy (Senior)', 'David (Senior)', 'Lisa (Junior)', 'Mike (Junior)'])
     
-    # Create layout for chat demo
-    col1, col2 = st.columns([2, 1])
+    # Create layout for chat demo - full width for chat
+    col1, col2 = st.columns([3, 1])
     
     with col1:
-        # Chat Header with brand colors
+        # Chat Header with brand colors - moved up
         st.markdown('''
         <div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
@@ -579,8 +566,8 @@ Calculating ALPS score and routing to best agent..."""
         </div>
         ''', unsafe_allow_html=True)
         
-        # Main chat container with WhatsApp-style background
-        st.markdown('<div class="chat-background" style="height: 600px; overflow-y: auto; padding: 20px; margin: 0;">', unsafe_allow_html=True)
+        # Main chat container with WhatsApp-style background - increased height
+        st.markdown('<div class="chat-background" style="height: 700px; overflow-y: auto; padding: 20px; margin: 0;">', unsafe_allow_html=True)
         
         # Display chat messages with brand colors
         for message in st.session_state.chat_messages:
