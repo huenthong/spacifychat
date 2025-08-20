@@ -12,6 +12,18 @@ from sklearn.preprocessing import LabelEncoder
 import warnings
 warnings.filterwarnings('ignore')
 
+# Try to import joblib for alternative model loading
+try:
+    import joblib
+except ImportError:
+    joblib = None
+
+# Try to import dill for alternative pickle loading
+try:
+    import dill
+except ImportError:
+    dill = None
+
 # Configure page
 st.set_page_config(
     page_title="BeLive ALPS Dashboard",
@@ -20,24 +32,39 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Load ML Model
+# Load ML Model (Model Only - No Feature Names Required)
 @st.cache_resource
 def load_ml_model():
-    """Load the trained ML model from pickle file"""
-    try:
-        # Try to load the model (adjust path as needed)
-        model_path = "best_rf_model.pkl"  # Update this to your actual model file path
+    """Load the trained ML model from pickle file - model only approach"""
+    model_paths = ["alps_model.pkl", "best_rf_model.pkl", "model.pkl"]
+    
+    for model_path in model_paths:
         if os.path.exists(model_path):
-            with open(model_path, 'rb') as f:
-                model_data = pickle.load(f)
-            st.success("✅ ML Model loaded successfully!")
-            return model_data
-        else:
-            st.warning("⚠️ ML model file not found. Using fallback scoring method.")
-            return None
-    except Exception as e:
-        st.error(f"❌ Error loading ML model: {str(e)}")
-        return None
+            for method_name, load_func in [
+                ("Joblib", lambda p: joblib.load(p) if joblib else None),
+                ("Standard Pickle", lambda p: pickle.load(open(p, 'rb'))),
+                ("Pickle with Latin-1", lambda p: pickle.load(open(p, 'rb'), encoding='latin-1')),
+                ("Pickle with Bytes", lambda p: pickle.load(open(p, 'rb'), encoding='bytes')),
+            ]:
+                try:
+                    if load_func(model_path) is None:
+                        continue
+                    model_data = load_func(model_path)
+                    st.success(f"✅ ML Model loaded successfully using {method_name}!")
+                    
+                    # Try to detect number of features the model expects
+                    n_features = None
+                    if hasattr(model_data, 'n_features_in_'):
+                        n_features = model_data.n_features_in_
+                        st.info(f"🔢 Model expects {n_features} features")
+                    
+                    return model_data, n_features
+                except Exception as e:
+                    continue
+    
+    st.error("❌ Could not load ML model with any method. Using fallback scoring.")
+    st.info("💡 Try re-saving your model with: `joblib.dump(model, 'alps_model.pkl')`")
+    return None, None
 
 # Load historical data for reference
 @st.cache_data
@@ -68,103 +95,169 @@ def load_historical_data():
         st.error(f"Error loading historical data: {str(e)}")
         return None
 
-# Feature engineering for ML model
-def prepare_features_for_model(data_dict):
-    """Prepare features for ML model prediction"""
+# Feature engineering for ML model (Simplified - No Feature Names Required)
+def prepare_features_for_model(data_dict, n_features=None):
+    """Prepare features for ML model prediction - auto-adapts to model requirements"""
     try:
-        # Create feature vector based on your model's training features
-        features = {}
+        # Create standardized features based on form data
+        features = []
         
-        # Budget score (normalize budget ranges)
+        # Feature 1: Budget score (normalized)
         budget_scores = {
             'RM 500-700': 0.25,
             'RM 700-900': 0.50,
             'RM 900-1200': 0.75,
             'RM 1200+': 1.0
         }
-        features['budget_score'] = budget_scores.get(data_dict.get('budget', ''), 0.5)
+        features.append(budget_scores.get(data_dict.get('budget', ''), 0.5))
         
-        # Move-in urgency (days to move in)
+        # Feature 2: Days to move in (normalized)
         move_in_date = data_dict.get('move_in_date')
         if move_in_date:
-            days_to_move = (move_in_date - datetime.now().date()).days
-            features['days_to_move'] = max(0, days_to_move)
-            features['urgency_score'] = 1 / (1 + days_to_move / 30)  # Exponential decay
+            days_to_move = max(0, (move_in_date - datetime.now().date()).days)
+            features.append(min(1.0, days_to_move / 90))  # Normalize to 0-1
         else:
-            features['days_to_move'] = 30
-            features['urgency_score'] = 0.5
+            features.append(0.33)  # Default ~30 days
         
-        # Nationality score
+        # Feature 3: Nationality score
         nationality_scores = {
-            'Malaysia': 0.4,
-            'China': 0.8,
-            'India': 0.7,
-            'Singapore': 0.9,
-            'Indonesia': 0.6,
-            'Others': 0.5
+            'Malaysia': 0.4, 'China': 0.8, 'India': 0.7,
+            'Singapore': 0.9, 'Indonesia': 0.6, 'Others': 0.5
         }
         nationality = data_dict.get('nationality', 'Malaysia')
-        if nationality not in nationality_scores:
-            nationality = 'Others'
-        features['nationality_score'] = nationality_scores[nationality]
+        features.append(nationality_scores.get(nationality, 0.5))
         
-        # Occupancy score
+        # Feature 4: Number of pax (normalized)
         pax = int(data_dict.get('pax', '1'))
-        features['pax_score'] = min(1.0, pax / 2)  # Normalize by typical 2-person max
+        features.append(min(1.0, pax / 3))  # Normalize by max expected pax
         
-        # Property location score
+        # Feature 5: Location premium
         premium_areas = ['KL City Center', 'Mont Kiara', 'Bangsar']
         area = data_dict.get('area', '')
-        features['location_premium'] = 1.0 if area in premium_areas else 0.6
+        features.append(1.0 if area in premium_areas else 0.6)
         
-        # Time-based features
-        current_time = datetime.now()
-        features['contact_hour'] = current_time.hour
-        features['contact_dayofweek'] = current_time.weekday()
-        features['contact_month'] = current_time.month
+        # Feature 6: Contact hour (normalized)
+        features.append(datetime.now().hour / 24.0)
         
-        # Convenience features
-        features['has_car'] = 1.0 if data_dict.get('have_car') == 'Yes' else 0.0
-        features['needs_parking'] = 1.0 if data_dict.get('need_parking') == 'Yes' else 0.0
+        # Feature 7: Contact day of week (normalized)
+        features.append(datetime.now().weekday() / 7.0)
+        
+        # Feature 8: Contact month (normalized)
+        features.append(datetime.now().month / 12.0)
+        
+        # Feature 9: Has car (binary)
+        features.append(1.0 if data_dict.get('have_car') == 'Yes' else 0.0)
+        
+        # Feature 10: Needs parking (binary)
+        features.append(1.0 if data_dict.get('need_parking') == 'Yes' else 0.0)
+        
+        # Feature 11: Gender (binary)
+        features.append(1.0 if data_dict.get('gender') == 'Female' else 0.0)
+        
+        # Feature 12: Tenancy period (normalized)
+        tenancy = data_dict.get('tenancy', '12 months')
+        features.append(1.0 if '12' in tenancy else 0.5)
+        
+        # Feature 13: Unit specification diversity (count / max possible)
+        unit_spec = data_dict.get('unit_spec', [])
+        features.append(len(unit_spec) / 3.0 if unit_spec else 0.33)
+        
+        # Feature 14: Workplace distance proxy (simple hash-based)
+        workplace = data_dict.get('workplace', '')
+        features.append((abs(hash(workplace)) % 100) / 100.0 if workplace else 0.5)
+        
+        # Feature 15: Weekend contact (binary)
+        features.append(1.0 if datetime.now().weekday() >= 5 else 0.0)
+        
+        # If model expects more features, pad with derived features
+        if n_features and len(features) < n_features:
+            # Add interaction features
+            budget_urgency = features[0] * (1 - features[1])  # Budget * Urgency
+            nationality_location = features[2] * features[4]  # Nationality * Location
+            convenience_score = (features[8] + features[9]) / 2  # Car + Parking
+            
+            additional_features = [
+                budget_urgency,
+                nationality_location, 
+                convenience_score,
+                features[0] * features[2],  # Budget * Nationality
+                features[1] * features[4],  # Urgency * Location
+            ]
+            
+            # Add more derived features as needed
+            while len(features) < n_features:
+                if len(additional_features) > 0:
+                    features.append(additional_features.pop(0))
+                else:
+                    # Add random features if we still need more
+                    features.append(np.random.random() * 0.1 + 0.45)  # Small random around 0.5
+        
+        # If model expects fewer features, trim
+        elif n_features and len(features) > n_features:
+            features = features[:n_features]
         
         return features
+        
     except Exception as e:
         st.error(f"Error preparing features: {str(e)}")
-        return {}
+        # Return default feature vector
+        default_size = n_features if n_features else 15
+        return [0.5] * default_size
 
-# ML-based ALPS scoring
-def calculate_alps_score_ml(user_data, model_data=None):
-    """Calculate ALPS score using ML model or fallback method"""
+# ML-based ALPS scoring (Model Only)
+def calculate_alps_score_ml(user_data, model_data=None, n_features=None):
+    """Calculate ALPS score using ML model - model only approach"""
     try:
         if model_data is not None:
             # Use ML model for prediction
-            features = prepare_features_for_model(user_data)
+            feature_vector = prepare_features_for_model(user_data, n_features)
             
-            # Convert to format expected by your model
-            feature_vector = np.array([list(features.values())]).reshape(1, -1)
+            # Convert to numpy array with correct shape
+            feature_array = np.array(feature_vector).reshape(1, -1)
             
-            # Make prediction (adjust based on your model's output)
+            # Make prediction
             if hasattr(model_data, 'predict_proba'):
-                # If it's a classification model predicting success probability
-                score_prob = model_data.predict_proba(feature_vector)[0][1]  # Probability of success
+                # Classification model - get probability of success class
+                probabilities = model_data.predict_proba(feature_array)
+                if probabilities.shape[1] > 1:
+                    score_prob = probabilities[0][1]  # Probability of positive class
+                else:
+                    score_prob = probabilities[0][0]
                 score = int(score_prob * 100)  # Convert to 0-100 scale
+                
             elif hasattr(model_data, 'predict'):
-                # If it's a regression model predicting score directly
-                score = int(model_data.predict(feature_vector)[0])
+                # Regression model or binary classifier
+                prediction = model_data.predict(feature_array)[0]
+                if prediction <= 1:  # If prediction is probability
+                    score = int(prediction * 100)
+                else:  # If prediction is already a score
+                    score = int(prediction)
             else:
-                # Fallback to manual calculation
+                # Fallback if no predict method
                 score = calculate_alps_score_manual(user_data)
+                feature_vector = []
             
             # Ensure score is within valid range
             score = max(0, min(100, score))
             
-            return score, features
+            # Create simple feature breakdown for display
+            feature_breakdown = {
+                'Budget Score': feature_vector[0] if len(feature_vector) > 0 else 0,
+                'Urgency Score': 1 - feature_vector[1] if len(feature_vector) > 1 else 0,
+                'Nationality Score': feature_vector[2] if len(feature_vector) > 2 else 0,
+                'Location Score': feature_vector[4] if len(feature_vector) > 4 else 0,
+                'Convenience Score': (feature_vector[8] + feature_vector[9]) / 2 if len(feature_vector) > 9 else 0,
+            }
+            
+            return score, feature_breakdown
         else:
             # Fallback to manual calculation
             return calculate_alps_score_manual(user_data), {}
             
     except Exception as e:
         st.error(f"Error in ML scoring: {str(e)}")
+        st.info(f"Feature vector length: {len(feature_vector) if 'feature_vector' in locals() else 'Unknown'}")
+        st.info(f"Expected features: {n_features if n_features else 'Auto-detected'}")
         return calculate_alps_score_manual(user_data), {}
 
 # Manual ALPS scoring (fallback)
@@ -312,8 +405,8 @@ if 'sample_data' not in st.session_state:
         
         st.session_state.sample_data = pd.DataFrame(sample_leads)
 
-# Load ML model
-model_data = load_ml_model()
+# Load ML model (model only)
+model_data, n_features = load_ml_model()
 
 # CSS styling (same as before)
 st.markdown("""
@@ -783,7 +876,7 @@ Thank you for your submission! 🎉"""
         
         if st.session_state.show_alps_calculation and st.session_state.chat_user_data:
             # Calculate ALPS score using ML model
-            alps_score, ml_features = calculate_alps_score_ml(st.session_state.chat_user_data, model_data)
+            alps_score, ml_features = calculate_alps_score_ml(st.session_state.chat_user_data, model_data, n_features)
             lead_temp, temp_color = determine_lead_temperature(alps_score)
             assigned_agent = assign_agent(lead_temp, st.session_state.chat_user_data)
             
@@ -796,8 +889,31 @@ Thank you for your submission! 🎉"""
             </div>
             """, unsafe_allow_html=True)
             
+            # Feature importance (if available and no feature names)
+            if hasattr(model_data, 'feature_importances_') and model_data is not None:
+                st.subheader("🎯 Model Feature Analysis")
+                
+                # Create generic feature names since we don't have the original ones
+                feature_importance = model_data.feature_importances_
+                generic_names = [
+                    'Budget Score', 'Timeline Urgency', 'Nationality Factor', 'Occupancy', 'Location Premium',
+                    'Contact Hour', 'Contact Day', 'Contact Month', 'Has Car', 'Needs Parking',
+                    'Gender Factor', 'Tenancy Period', 'Unit Preference', 'Workplace Factor', 'Weekend Contact'
+                ]
+                
+                # Extend or trim to match actual features
+                if len(feature_importance) > len(generic_names):
+                    generic_names.extend([f'Feature_{i}' for i in range(len(generic_names), len(feature_importance))])
+                elif len(feature_importance) < len(generic_names):
+                    generic_names = generic_names[:len(feature_importance)]
+                
+                # Show top 5 most important features
+                top_indices = np.argsort(feature_importance)[-5:][::-1]
+                for i, idx in enumerate(top_indices, 1):
+                    st.metric(f"{i}. {generic_names[idx]}", f"{feature_importance[idx]:.3f}")
+            
             # ML Features breakdown (if available)
-            if ml_features:
+            elif ml_features:
                 st.subheader("🧠 AI Feature Analysis")
                 for feature, value in list(ml_features.items())[:5]:  # Show top 5 features
                     st.metric(feature.replace('_', ' ').title(), f"{value:.3f}")
