@@ -216,17 +216,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header - TO REPLACE WITH YOUR LOGO IMAGE, UNCOMMENT BELOW:
-# st.image("your_logo.webp", use_container_width=True)
+# REPLACE THIS ENTIRE HEADER WITH YOUR LOGO IMAGE:
+st.image("belivelogo.webp", width=400)
 
-# Temporary header - REMOVE THIS WHEN YOU ADD YOUR IMAGE
-#st.markdown("""
-#<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 15px; border-radius: 10px; margin-bottom: 5px; text-align: center;">
-    #<h1 style="color: white; margin: 0; font-size: 24px;">🏠 BeLive ALPS Dashboard</h1>
-    #<p style="color: white; margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Automated Lead Prioritization System</p>
-#</div>
-#""", unsafe_allow_html=True)
-st.image("belivelogo.webp", width=300)  # Adjust width as needed
+# COMMENT OUT THIS SECTION WHEN YOU ADD YOUR LOGO:
+# st.markdown("""
+# <div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 15px; border-radius: 10px; margin-bottom: 5px; text-align: center;">
+#     <h1 style="color: white; margin: 0; font-size: 24px;">🏠 BeLive ALPS Dashboard</h1>
+#     <p style="color: white; margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Automated Lead Prioritization System</p>
+# </div>
+# """, unsafe_allow_html=True)
 
 # Get base data
 df = st.session_state.sample_data
