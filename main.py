@@ -124,12 +124,28 @@ if 'sample_data' not in st.session_state:
     
     st.session_state.sample_data = pd.DataFrame(sample_leads)
 
-# CSS for better styling
+# CSS for better styling with brand colors and WhatsApp-like background
 st.markdown("""
 <style>
+/* Brand colors */
+:root {
+    --belive-teal: #4ECDC4;
+    --belive-orange: #FF7F50;
+    --belive-dark-teal: #3A9B96;
+}
+
 .main .block-container {
     padding-top: 2rem;
     padding-bottom: 0rem;
+}
+
+/* WhatsApp-style background pattern */
+.chat-background {
+    background-image: 
+        radial-gradient(circle at 25% 25%, rgba(78, 205, 196, 0.1) 2px, transparent 2px),
+        radial-gradient(circle at 75% 75%, rgba(255, 127, 80, 0.1) 2px, transparent 2px);
+    background-size: 50px 50px;
+    background-color: #e5ddd5;
 }
 
 .metric-card {
@@ -155,17 +171,61 @@ st.markdown("""
 }
 
 .stTabs [aria-selected="true"] {
-    background-color: #075e54;
+    background-color: var(--belive-teal);
     color: white;
+}
+
+/* Update button colors to match brand */
+.stButton button {
+    background-color: var(--belive-orange);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    transition: background-color 0.3s;
+}
+
+.stButton button:hover {
+    background-color: #e6654a;
+}
+
+/* Form elements styling */
+.stSelectbox > div > div {
+    background-color: white;
+}
+
+.stTextInput > div > div > input {
+    background-color: white;
+}
+
+.stMultiSelect > div > div {
+    background-color: white;
+}
+
+/* User message with brand colors */
+.user-message-brand {
+    background-color: var(--belive-orange);
+    color: white;
+}
+
+/* Bot message styling */
+.bot-message-brand {
+    background-color: white;
+    border-left: 3px solid var(--belive-teal);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Header
+# Header with brand logo and colors
 st.markdown("""
-<div style="background-color: #075e54; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-    <h1 style="color: white; text-align: center; margin: 0;">🏠 BeLive ALPS Dashboard</h1>
-    <p style="color: white; text-align: center; margin: 5px 0 0 0;">Automated Lead Prioritization System</p>
+<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+        <div style="font-size: 48px; font-weight: bold; color: white;">
+            <span style="color: #4ECDC4; background: white; padding: 5px 10px; border-radius: 10px; margin-right: 5px;">be</span><span style="color: #FF7F50; background: white; padding: 5px 10px; border-radius: 10px;">live</span>
+        </div>
+    </div>
+    <h1 style="color: white; margin: 10px 0 0 0; font-size: 28px;">ALPS Dashboard</h1>
+    <p style="color: white; margin: 5px 0 0 0; opacity: 0.9;">Automated Lead Prioritization System</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -508,21 +568,29 @@ Calculating ALPS score and routing to best agent..."""
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Chat Header
-        st.markdown('<div style="background-color: #075e54; color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;"><h3 style="margin: 0;">🏠 BeLive Co-Living</h3><p style="margin: 5px 0 0 0;">Customer Service Chat</p></div>', unsafe_allow_html=True)
+        # Chat Header with brand colors
+        st.markdown('''
+        <div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; margin: 0;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span style="color: #4ECDC4; background: white; padding: 2px 6px; border-radius: 5px; font-weight: bold; font-size: 14px;">be</span><span style="color: #FF7F50; background: white; padding: 2px 6px; border-radius: 5px; font-weight: bold; font-size: 14px;">live</span>
+                <span style="margin-left: 10px;">Co-Living</span>
+            </div>
+            <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">Customer Service Chat</p>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        # Main chat container
-        st.markdown('<div style="background-color: #e5ddd5; height: 600px; overflow-y: auto; padding: 20px; margin: 0;">', unsafe_allow_html=True)
+        # Main chat container with WhatsApp-style background
+        st.markdown('<div class="chat-background" style="height: 600px; overflow-y: auto; padding: 20px; margin: 0;">', unsafe_allow_html=True)
         
-        # Display chat messages
+        # Display chat messages with brand colors
         for message in st.session_state.chat_messages:
             if message['sender'] == 'user':
                 st.markdown(f"""
-                <div style="background-color: #dcf8c6; margin: 8px 0; padding: 8px 12px; border-radius: 7px; 
+                <div style="background-color: #FF7F50; color: white; margin: 8px 0; padding: 8px 12px; border-radius: 7px; 
                            max-width: 65%; margin-left: auto; margin-right: 0; word-wrap: break-word; 
                            float: right; clear: both; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                     {message['content']}
-                    <div style="font-size: 11px; color: #666; text-align: right; margin-top: 2px;">{message['timestamp']}</div>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.8); text-align: right; margin-top: 2px;">{message['timestamp']}</div>
                 </div>
                 <div style="clear: both;"></div>
                 """, unsafe_allow_html=True)
@@ -530,7 +598,8 @@ Calculating ALPS score and routing to best agent..."""
                 st.markdown(f"""
                 <div style="background-color: #ffffff; margin: 8px 0; padding: 8px 12px; border-radius: 7px; 
                            max-width: 65%; margin-left: 0; margin-right: auto; word-wrap: break-word; 
-                           float: left; clear: both; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                           float: left; clear: both; box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+                           border-left: 3px solid #4ECDC4;">
                     {message['content']}
                     <div style="font-size: 11px; color: #666; text-align: left; margin-top: 2px;">{message['timestamp']}</div>
                 </div>
@@ -539,24 +608,24 @@ Calculating ALPS score and routing to best agent..."""
         
         # Show selections and forms
         if st.session_state.show_area_selection:
-            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.9); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.95); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #4ECDC4;">', unsafe_allow_html=True)
             display_area_selection()
             st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.show_condo_selection:
-            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.9); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.95); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #4ECDC4;">', unsafe_allow_html=True)
             display_condo_selection()
             st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.show_form:
-            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.9); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+            st.markdown('<div style="background-color: rgba(255, 255, 255, 0.95); padding: 15px; margin: 5px 0; border-radius: 10px; border: 1px solid #4ECDC4;">', unsafe_allow_html=True)
             display_inquiry_form()
             st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Input area
-        st.markdown('<div style="background-color: #f0f0f0; padding: 10px; border-radius: 0 0 10px 10px; border-top: 1px solid #ddd; margin: 0;">', unsafe_allow_html=True)
+        # Input area with brand colors
+        st.markdown('<div style="background: linear-gradient(135deg, #4ECDC4, #FF7F50); padding: 10px; border-radius: 0 0 10px 10px; margin: 0;">', unsafe_allow_html=True)
         
         with st.form("chat_input_form", clear_on_submit=True):
             col_input, col_send = st.columns([5, 1])
@@ -755,25 +824,25 @@ with tab2:
     col1, col2 = st.columns(2)
     
     with col1:
-        # Lead distribution pie chart
+        # Update chart colors to match brand
         temp_counts = filtered_df['Lead_Temperature'].value_counts()
         fig_pie = px.pie(
             values=temp_counts.values,
             names=temp_counts.index,
             title="Lead Temperature Distribution",
-            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
+            color_discrete_map={'Hot': '#FF7F50', 'Warm': '#FFB347', 'Cold': '#4ECDC4'}
         )
         st.plotly_chart(fig_pie, use_container_width=True)
     
     with col2:
-        # ALPS Score distribution
+        # ALPS Score distribution with brand colors
         fig_hist = px.histogram(
             filtered_df,
             x='ALPS_Score',
             nbins=20,
             title="ALPS Score Distribution",
             color='Lead_Temperature',
-            color_discrete_map={'Hot': '#ff4444', 'Warm': '#ffaa00', 'Cold': '#4444ff'}
+            color_discrete_map={'Hot': '#FF7F50', 'Warm': '#FFB347', 'Cold': '#4ECDC4'}
         )
         st.plotly_chart(fig_hist, use_container_width=True)
     
