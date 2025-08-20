@@ -213,12 +213,7 @@ st.markdown("""
     background-color: white;
     border-left: 3px solid var(--belive-teal);
 }
-</style>
-""", unsafe_allow_html=True)
 
-# ⬇️ Add this right after your existing CSS block (either inside it at the end, or as a new block after it)
-st.markdown("""
-<style>
 /* tighten vertical spacing between Streamlit elements */
 div.element-container { margin-top: 4px !important; margin-bottom: 4px !important; }
 /* remove default gaps inside columns */
@@ -232,9 +227,9 @@ div[data-testid="stVerticalBlock"] { gap: 4px !important; }
   background: transparent;
   display: block;
 }
+
 </style>
 """, unsafe_allow_html=True)
-
 
 # REPLACE THIS ENTIRE HEADER WITH YOUR LOGO IMAGE:
 st.image("belivelogo.webp", width=400)
