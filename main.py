@@ -26,7 +26,7 @@ def load_ml_model():
     """Load the trained ML model from pickle file"""
     try:
         # Try to load the model (adjust path as needed)
-        model_path = "alps_model.pkl"  # Update this to your actual model file path
+        model_path = "best_rf_model.pkl"  # Update this to your actual model file path
         if os.path.exists(model_path):
             with open(model_path, 'rb') as f:
                 model_data = pickle.load(f)
