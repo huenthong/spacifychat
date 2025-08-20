@@ -597,21 +597,21 @@ Calculating ALPS score and routing to best agent..."""
         #</div>
         #''', unsafe_allow_html=True)
 
-    # Chat header (use your own logo image file)
-    CHAT_HEADER_HTML = f"""
-    <div style="
-      background: linear-gradient(135deg, #4ECDC4, #FF7F50);
-      padding: 8px 12px;
-      border-radius: 10px 10px 0 0;
-      margin: 0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:56px;">
-      <img src="belivelogo.webp" alt="BeLive" style="height:34px; object-fit:contain;" />
-    </div>
-    """
-    st.markdown(CHAT_HEADER_HTML, unsafe_allow_html=True)
+        # Chat header (use your own logo image file)
+        CHAT_HEADER_HTML = f"""
+        <div style="
+          background: linear-gradient(135deg, #4ECDC4, #FF7F50);
+          padding: 8px 12px;
+          border-radius: 10px 10px 0 0;
+          margin: 0;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          height:56px;">
+          <img src="belivelogo.webp" alt="BeLive" style="height:34px; object-fit:contain;" />
+        </div>
+        """
+        st.markdown(CHAT_HEADER_HTML, unsafe_allow_html=True)
         
         # Main chat container - BIGGER HEIGHT, NO GAPS
         st.markdown('<div class="chat-scroll">', unsafe_allow_html=True)
