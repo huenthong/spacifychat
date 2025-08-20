@@ -318,6 +318,24 @@ if 'sample_data' not in st.session_state:
         
         for _, row in historical_df.iterrows():
             # Create ALPS-compatible record
+            alps_score = np.random.randint(40, 95)
+            
+            # Determine lead temperature based on score
+            if alps_score >= 80:
+                lead_temp = 'Hot'
+            elif alps_score >= 60:
+                lead_temp = 'Warm'
+            else:
+                lead_temp = 'Cold'
+            
+            # Assign agent with smart routing
+            if lead_temp == 'Hot':
+                agent = np.random.choice(['Sarah', 'John'], p=[0.6, 0.4])  # Favor top performers
+            elif lead_temp == 'Warm':
+                agent = np.random.choice(['Sarah', 'John', 'Amy', 'David'], p=[0.3, 0.3, 0.2, 0.2])
+            else:
+                agent = np.random.choice(['Amy', 'David', 'Lisa', 'Mike'], p=[0.3, 0.3, 0.2, 0.2])
+            
             lead_record = {
                 'Lead_ID': f'H{len(sample_leads)+1:03d}',
                 'Timestamp': row['Initial Contact Date'],
@@ -327,12 +345,12 @@ if 'sample_data' not in st.session_state:
                 'Nationality': row['Nationality'] if pd.notna(row['Nationality']) else 'Malaysia',
                 'Source': row['Combined Lead Source'] if pd.notna(row['Combined Lead Source']) else 'Website',
                 'Location': row['Selected Property'] if pd.notna(row['Selected Property']) else 'Others',
-                'ALPS_Score': np.random.randint(40, 95),  # Will be recalculated with ML model
-                'Lead_Temperature': 'Warm',  # Will be recalculated
-                'Assigned_Agent': 'System Auto',
+                'ALPS_Score': alps_score,
+                'Lead_Temperature': lead_temp,
+                'Assigned_Agent': agent,
                 'Response_Time_Min': np.random.exponential(5),
-                'SLA_Target_Min': 5,
-                'SLA_Met': True,
+                'SLA_Target_Min': 2 if lead_temp == 'Hot' else 5 if lead_temp == 'Warm' else 10,
+                'SLA_Met': np.random.choice([True, False], p=[0.85, 0.15]),
                 'Status': row['Lead_Status'] if pd.notna(row['Lead_Status']) else 'New'
             }
             sample_leads.append(lead_record)
@@ -384,13 +402,16 @@ if 'sample_data' not in st.session_state:
             else:
                 lead_temp = 'Cold'
             
-            # Assign agent based on lead temperature and availability
+            # Assign agent based on lead temperature with fairness and top sales priority
             if lead_temp == 'Hot':
-                agent = np.random.choice(['Sarah', 'John'])
+                # Hot leads go to top performers but with some fairness
+                agent = np.random.choice(['Sarah', 'John'], p=[0.6, 0.4])
             elif lead_temp == 'Warm':
-                agent = np.random.choice(['Sarah', 'John', 'Amy', 'David'])
+                # Warm leads distributed among experienced agents
+                agent = np.random.choice(['Sarah', 'John', 'Amy', 'David'], p=[0.3, 0.3, 0.2, 0.2])
             else:
-                agent = np.random.choice(agents)
+                # Cold leads distributed among all agents for development
+                agent = np.random.choice(agents, p=[0.2, 0.2, 0.2, 0.2, 0.1, 0.1])
             
             sample_leads.append({
                 'Lead_ID': f'L{i+1:03d}',
@@ -651,7 +672,8 @@ Thank you for choosing BeLive Co-Living! 🎉"""
                     st.session_state.selected_area = area
                     st.session_state.show_area_selection = False
                     st.session_state.show_condo_selection = True
-                    
+                    st.session_state.chat_stage = 'area_selected'
+
                     add_chat_message('user', area)
                     add_chat_message('bot', f"Great choice! Here are the available co-living spaces in {area}:")
                     st.rerun()
@@ -773,17 +795,22 @@ Thank you for your submission! 🎉"""
             return 'Cold', '#4444ff'
     
     def assign_agent(lead_temp, user_data):
-        """Smart routing logic"""
+        """Smart routing logic with top sales priority and fairness"""
         if lead_temp == 'Hot':
-            # For hot leads, prioritize experienced agents
+            # Hot leads prioritize top performers (Sarah gets more, but John also gets chances)
             agents = ['Sarah', 'John']
-            return np.random.choice(agents)
+            probabilities = [0.65, 0.35]  # Sarah gets 65% of hot leads
+            return np.random.choice(agents, p=probabilities)
         elif lead_temp == 'Warm':
+            # Warm leads distributed among experienced agents with slight preference for top sales
             agents = ['Sarah', 'John', 'Amy', 'David']
-            return np.random.choice(agents)
+            probabilities = [0.35, 0.35, 0.15, 0.15]  # Top sales get more warm leads
+            return np.random.choice(agents, p=probabilities)
         else:
-            agents = ['Amy', 'David', 'Lisa', 'Mike']
-            return np.random.choice(agents)
+            # Cold leads distributed for agent development and fairness
+            agents = ['Amy', 'David', 'Lisa', 'Mike', 'Sarah', 'John']
+            probabilities = [0.25, 0.25, 0.20, 0.20, 0.05, 0.05]  # Top sales get fewer cold leads
+            return np.random.choice(agents, p=probabilities)
     
     # Create layout for chat demo
     col1, col2 = st.columns([3, 1])
@@ -1168,36 +1195,6 @@ with tab3:
     
     st.markdown("---")
     
-    # ALPS criteria weights
-    st.subheader("Current ALPS Criteria Weights")
-    
-    criteria_weights = {
-        'Move-in Timeline': 35,
-        'Budget Range': 25,
-        'Nationality': 20,
-        'Lead Source': 10,
-        'Location Match': 6,
-        'Convenience Matrix': 4
-    }
-    
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        # Display weights
-        for criteria, weight in criteria_weights.items():
-            st.metric(criteria, f"{weight}%")
-    
-    with col2:
-        # Weights pie chart
-        fig_weights = px.pie(
-            values=list(criteria_weights.values()),
-            names=list(criteria_weights.keys()),
-            title="ALPS Scoring Criteria Weights"
-        )
-        st.plotly_chart(fig_weights, use_container_width=True)
-    
-    st.markdown("---")
-    
     # Score analysis by criteria
     col1, col2 = st.columns(2)
     
@@ -1299,12 +1296,12 @@ with tab4:
     with col3:
         hot_leads_filtered = filtered_df_routing[filtered_df_routing['Lead_Temperature'] == 'Hot']
         if len(hot_leads_filtered) > 0:
-            hot_to_experienced = len(hot_leads_filtered[
+            hot_to_top_sales = len(hot_leads_filtered[
                 hot_leads_filtered['Assigned_Agent'].isin(['Sarah', 'John'])
             ]) / len(hot_leads_filtered) * 100
         else:
-            hot_to_experienced = 0
-        st.metric("Hot → Experienced %", f"{hot_to_experienced:.1f}%")
+            hot_to_top_sales = 0
+        st.metric("Hot → Top Sales %", f"{hot_to_top_sales:.1f}%")
     
     with col4:
         agent_counts = filtered_df_routing.groupby('Assigned_Agent').size()
