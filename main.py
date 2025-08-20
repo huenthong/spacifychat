@@ -228,7 +228,23 @@ div[data-testid="stVerticalBlock"] { gap: 4px !important; }
   display: block;
 }
 
-.chat-scroll { padding: 6px 20px 12px; height: 600px; }
+/* Remove the gap between header banner and chat list */
+.element-container:has(.chat-header) { 
+  margin-bottom: 0 !important; 
+}
+.element-container:has(.chat-scroll) { 
+  margin-top: 0 !important; 
+}
+
+/* Make the chat list a bit shorter so it sits higher on the page */
+.chat-scroll {
+  height: 520px;               /* was 650 — tweak to taste */
+  overflow-y: auto;
+  padding: 6px 18px 12px;      /* small top padding */
+  margin: 0 !important;
+  background: transparent;
+  display: block;
+}
 
 </style>
 """, unsafe_allow_html=True)
