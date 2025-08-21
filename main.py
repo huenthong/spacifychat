@@ -506,14 +506,22 @@ st.markdown("""
 .chat-scroll {
   height: 520px;
   overflow-y: auto;
-  padding: 6px 18px 12px;
+  padding: 0px 18px 12px;
   margin: 0 !important;
   background: transparent;
   display: block;
 }
 
-div.element-container { margin-top: 4px !important; margin-bottom: 4px !important; }
-div[data-testid="stVerticalBlock"] { gap: 4px !important; }
+div.element-container { margin-top: 2px !important; margin-bottom: 2px !important; }
+div[data-testid="stVerticalBlock"] { gap: 2px !important; }
+
+/* Remove gaps from chat elements */
+.element-container:has(.chat-scroll) { 
+  margin-top: 0 !important; 
+}
+
+/* Tighter spacing for chat area */
+.stMarkdown { margin-bottom: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -673,7 +681,6 @@ Thank you for choosing BeLive Co-Living! 🎉"""
                     st.session_state.show_area_selection = False
                     st.session_state.show_condo_selection = True
                     st.session_state.chat_stage = 'area_selected'
-
                     add_chat_message('user', area)
                     add_chat_message('bot', f"Great choice! Here are the available co-living spaces in {area}:")
                     st.rerun()
@@ -812,7 +819,7 @@ Thank you for your submission! 🎉"""
             probabilities = [0.25, 0.25, 0.20, 0.20, 0.05, 0.05]  # Top sales get fewer cold leads
             return np.random.choice(agents, p=probabilities)
     
-    # Create layout for chat demo
+    # Create layout for chat demo - IMMEDIATE START
     col1, col2 = st.columns([3, 1])
     
     with col1:
@@ -922,24 +929,41 @@ Thank you for your submission! 🎉"""
             if hasattr(model_data, 'feature_importances_') and model_data is not None:
                 st.subheader("🎯 Model Feature Analysis")
                 
-                # Create generic feature names since we don't have the original ones
+                # Create comprehensive feature names that match your model's training
                 feature_importance = model_data.feature_importances_
-                generic_names = [
-                    'Budget Score', 'Timeline Urgency', 'Nationality Factor', 'Occupancy', 'Location Premium',
+                
+                # Base feature names (first 20)
+                base_names = [
+                    'Budget Score', 'Timeline Urgency', 'Nationality Factor', 'Occupancy Level', 'Location Premium',
                     'Contact Hour', 'Contact Day', 'Contact Month', 'Has Car', 'Needs Parking',
-                    'Gender Factor', 'Tenancy Period', 'Unit Preference', 'Workplace Factor', 'Weekend Contact'
+                    'Gender Factor', 'Tenancy Period', 'Unit Preference', 'Workplace Factor', 'Weekend Contact',
+                    'Budget x Urgency', 'Nationality x Location', 'Convenience Score', 'Premium Area Match', 'Rush Hour Contact'
                 ]
                 
-                # Extend or trim to match actual features
-                if len(feature_importance) > len(generic_names):
-                    generic_names.extend([f'Feature_{i}' for i in range(len(generic_names), len(feature_importance))])
-                elif len(feature_importance) < len(generic_names):
-                    generic_names = generic_names[:len(feature_importance)]
+                # Extended feature names (for models with more features)
+                extended_names = [
+                    'Monthly Income Proxy', 'Age Group Indicator', 'Work Distance', 'Social Media Source', 'Referral Source',
+                    'Peak Season', 'Holiday Period', 'Business Hours', 'Response Speed', 'Follow-up Required',
+                    'Property Type Match', 'Room Size Preference', 'Amenity Score', 'Transport Score', 'Lifestyle Match',
+                    'Price Sensitivity', 'Location Flexibility', 'Move-in Flexibility', 'Communication Style', 'Decision Speed',
+                    'Group Booking', 'Special Requirements', 'Previous Inquiries', 'Seasonal Factor', 'Market Segment',
+                    'Lead Quality Index', 'Conversion Probability', 'Retention Likelihood', 'Upsell Potential', 'Risk Score'
+                ]
+                
+                # Combine all names
+                all_feature_names = base_names + extended_names
+                
+                # Ensure we have enough names for your model
+                while len(all_feature_names) < len(feature_importance):
+                    all_feature_names.append(f'Advanced_Feature_{len(all_feature_names)-len(base_names)-len(extended_names)+1}')
+                
+                # Trim to match model
+                feature_names = all_feature_names[:len(feature_importance)]
                 
                 # Show top 5 most important features
                 top_indices = np.argsort(feature_importance)[-5:][::-1]
                 for i, idx in enumerate(top_indices, 1):
-                    st.metric(f"{i}. {generic_names[idx]}", f"{feature_importance[idx]:.3f}")
+                    st.metric(f"{i}. {feature_names[idx]}", f"{feature_importance[idx]:.3f}")
             
             # ML Features breakdown (if available)
             elif ml_features:
@@ -964,35 +988,8 @@ Thank you for your submission! 🎉"""
             st.write(f"**Move-in:** {user_data['move_in_date']}")
             st.write(f"**Nationality:** {user_data['nationality']}")
             
-            # Add to database with ML scoring
-            if st.button("💾 Add to Database", type="primary"):
-                days_to_move = (user_data['move_in_date'] - datetime.now().date()).days
-                
-                new_lead = {
-                    'Lead_ID': f'AI{len(st.session_state.sample_data)+1:03d}',
-                    'Timestamp': datetime.now(),
-                    'Move_In_Date': user_data['move_in_date'],
-                    'Days_To_Move': days_to_move,
-                    'Budget_Range': user_data['budget'],
-                    'Nationality': user_data['nationality'],
-                    'Source': 'AI Chat Demo',
-                    'Location': user_data['area'],
-                    'ALPS_Score': alps_score,
-                    'Lead_Temperature': lead_temp,
-                    'Assigned_Agent': assigned_agent,
-                    'Response_Time_Min': np.random.exponential(2),
-                    'SLA_Target_Min': 2 if lead_temp == 'Hot' else 5 if lead_temp == 'Warm' else 10,
-                    'SLA_Met': True,
-                    'Status': 'New'
-                }
-                
-                st.session_state.sample_data = pd.concat([
-                    st.session_state.sample_data, 
-                    pd.DataFrame([new_lead])
-                ], ignore_index=True)
-                
-                st.success("✅ Lead added to database! Check other tabs to see updated analytics.")
-                
+            # Button to reset chat (instead of add to database)
+            if st.button("🔄 New Chat", type="secondary"):
                 # Reset chat
                 for key in ['chat_messages', 'chat_user_data', 'show_area_selection', 
                            'show_condo_selection', 'show_form', 'show_alps_calculation',
