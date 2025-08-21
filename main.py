@@ -512,16 +512,29 @@ st.markdown("""
   display: block;
 }
 
-div.element-container { margin-top: 2px !important; margin-bottom: 2px !important; }
-div[data-testid="stVerticalBlock"] { gap: 2px !important; }
+/* Remove ALL gaps and margins */
+div.element-container { margin-top: 0px !important; margin-bottom: 0px !important; }
+div[data-testid="stVerticalBlock"] { gap: 0px !important; }
 
 /* Remove gaps from chat elements */
 .element-container:has(.chat-scroll) { 
   margin-top: 0 !important; 
+  margin-bottom: 0 !important;
 }
 
 /* Tighter spacing for chat area */
-.stMarkdown { margin-bottom: 0 !important; }
+.stMarkdown { margin-bottom: 0 !important; margin-top: 0 !important; }
+
+/* Remove header spacing */
+.main .block-container {
+    padding-top: 1rem;
+    padding-bottom: 0rem;
+}
+
+/* Remove tab content padding */
+.stTabs > div > div > div > div {
+    padding-top: 0rem !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -551,7 +564,8 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
 ])
 
 with tab1:
-    st.header("🤖 AI-Powered Lead Capture System")
+    # Remove the st.header to eliminate the gap
+    st.markdown("### 🤖 AI-Powered Lead Capture System")
     
     # Initialize chat session state
     if 'chat_messages' not in st.session_state:
